@@ -3,29 +3,33 @@ package shortener
 import (
 	"errors"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
-	sequence "github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
 var _ interfaces.URLService = (*URLShortenerService)(nil)
 
 type URLShortenerService struct {
 	storage interfaces.Storage
+	seq     interfaces.Sequence
 }
 
-func NewURLShortenerService(storage interfaces.Storage) *URLShortenerService {
+func NewURLShortenerService(storage interfaces.Storage, seq interfaces.Sequence) *URLShortenerService {
 	return &URLShortenerService{
 		storage: storage,
+		seq:     seq,
 	}
 }
 
-func (u *URLShortenerService) ShortenURL(url string) string {
+func (u *URLShortenerService) ShortenURL(url string) (string, error) {
 	for {
-		key := sequence.Generate(8)
+		key, err := u.seq.Generate(8)
+		if err != nil {
+			return "", err
+		}
 
 		_, ok := u.storage.Get(key)
 		if !ok {
 			u.storage.Store(key, url)
-			return key
+			return key, nil
 		}
 	}
 }

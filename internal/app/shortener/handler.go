@@ -3,9 +3,7 @@ package shortener
 import (
 	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
 	"io"
-	"log"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -39,32 +37,31 @@ func (h *URLShortenerHandler) shortenURL(w http.ResponseWriter, req *http.Reques
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			log.Fatalln("Error in closing request Body")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}(req.Body)
 	bodyReq, err := io.ReadAll(req.Body)
 	if err != nil {
-		http.Error(w, "Can't read content of body", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	body := string(bodyReq)
 	if len(body) == 0 {
 		http.Error(w, "Body must have a link", http.StatusUnprocessableEntity)
+		return
 	}
 
-	_, parseErr := url.ParseRequestURI(body)
-	if parseErr != nil {
-		http.Error(w, "URI can't be parsed", http.StatusBadRequest)
+	key, shortenErr := h.service.ShortenURL(body)
+	if shortenErr != nil {
+		http.Error(w, shortenErr.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	key := h.service.ShortenURL(body)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write([]byte(host + key))
-	if err != nil {
-		log.Fatalln("Error in writing short link to response")
-	}
+	w.Write([]byte(host + key))
 }
 
 func (h *URLShortenerHandler) expandURL(w http.ResponseWriter, req *http.Request) {
@@ -72,7 +69,7 @@ func (h *URLShortenerHandler) expandURL(w http.ResponseWriter, req *http.Request
 
 	originalLink, err := h.service.ExpandURL(key)
 	if err != nil {
-		http.Error(w, "link not found", http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
