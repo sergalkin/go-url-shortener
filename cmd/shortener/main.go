@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/sergalkin/go-url-shortener.git/internal/app/shortener"
-	storage2 "github.com/sergalkin/go-url-shortener.git/internal/app/storage"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"log"
 	"math/rand"
 	"net/http"
@@ -12,8 +13,9 @@ import (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	storage := storage2.NewMemory()
-	service := shortener.NewURLShortenerService(storage)
+	memoryStorage := storage.NewMemory()
+	sequence := utils.NewSequence()
+	service := shortener.NewURLShortenerService(memoryStorage, sequence)
 	handler := shortener.NewURLShortenerHandler(service)
 
 	http.HandleFunc("/", handler.URLHandler)
