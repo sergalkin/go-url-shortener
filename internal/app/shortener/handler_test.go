@@ -203,7 +203,9 @@ func TestURLShortenerHandler_URLHandler(t *testing.T) {
 
 			h := http.HandlerFunc(NewURLShortenerHandler(tt.urlService).URLHandler)
 			h.ServeHTTP(w, request)
+
 			res := w.Result()
+			defer res.Body.Close()
 
 			assert.Equal(t, tt.want.code, res.StatusCode)
 			assert.Equal(t, tt.want.response, w.Body.String())
@@ -260,7 +262,9 @@ func TestURLShortenerHandler_expandURL(t *testing.T) {
 
 			h := http.HandlerFunc(NewURLShortenerHandler(tt.urlService).expandURL)
 			h.ServeHTTP(w, request)
+
 			res := w.Result()
+			defer res.Body.Close()
 
 			assert.Equal(t, tt.want.code, res.StatusCode)
 			assert.Equal(t, tt.want.response, w.Body.String())
@@ -330,7 +334,9 @@ func TestURLShortenerHandler_shortenURL(t *testing.T) {
 
 			h := http.HandlerFunc(NewURLShortenerHandler(tt.urlService).shortenURL)
 			h.ServeHTTP(w, request)
+
 			res := w.Result()
+			defer res.Body.Close()
 
 			assert.Equal(t, tt.want.code, res.StatusCode)
 			assert.Equal(t, tt.want.response, w.Body.String())
