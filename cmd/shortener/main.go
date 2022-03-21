@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/shortener"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"log"
@@ -18,10 +19,14 @@ func main() {
 
 	memoryStorage := storage.NewMemory()
 	sequence := utils.NewSequence()
-	service := shortener.NewURLShortenerService(memoryStorage, sequence)
-	handler := shortener.NewURLShortenerHandler(service)
 
-	r.Get("/", handler.URLHandler)
+	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(memoryStorage, sequence))
+	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(memoryStorage))
+
+	r.Route("/", func(r chi.Router) {
+		r.Post("/", shortenHandler.ShortenURL)
+		r.Get("/{id}", expandHandler.ExpandURL)
+	})
 
 	server := &http.Server{
 		Addr:    ":8080",

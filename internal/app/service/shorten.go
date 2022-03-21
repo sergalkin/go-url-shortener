@@ -1,11 +1,8 @@
-package shortener
+package service
 
-import (
-	"errors"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
-)
+import "github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
 
-var _ interfaces.URLService = (*URLShortenerService)(nil)
+var _ interfaces.URLShorten = (*URLShortenerService)(nil)
 
 type URLShortenerService struct {
 	storage interfaces.Storage
@@ -32,13 +29,4 @@ func (u *URLShortenerService) ShortenURL(url string) (string, error) {
 			return key, nil
 		}
 	}
-}
-
-func (u *URLShortenerService) ExpandURL(key string) (string, error) {
-	url, ok := u.storage.Get(key)
-	if !ok || url == "" {
-		return url, errors.New("error in expanding shortened link")
-	}
-
-	return url, nil
 }
