@@ -95,6 +95,7 @@ func TestURLExpandHandler_ExpandURL(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			resp, body := expandTestRequest(t, ts, http.MethodGet, "/"+tt.body)
+			defer resp.Body.Close()
 			assert.Equal(t, tt.want.code, resp.StatusCode)
 
 			if tt.want.code == http.StatusNotFound {

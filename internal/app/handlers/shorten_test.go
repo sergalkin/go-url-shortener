@@ -109,6 +109,7 @@ func TestURLShortenerHandler_ShortenURL(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			resp, body := shortenTestRequest(t, ts, http.MethodPost, "/", strings.NewReader(tt.body))
+			defer resp.Body.Close()
 
 			assert.Equal(t, tt.want.code, resp.StatusCode)
 			assert.Equal(t, tt.want.response, body)
