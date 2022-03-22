@@ -2,15 +2,15 @@ package handlers
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"net/http"
 )
 
 type URLExpandHandler struct {
-	service interfaces.URLExpand
+	service service.URLExpand
 }
 
-func NewURLExpandHandler(service interfaces.URLExpand) *URLExpandHandler {
+func NewURLExpandHandler(service service.URLExpand) *URLExpandHandler {
 	return &URLExpandHandler{
 		service: service,
 	}

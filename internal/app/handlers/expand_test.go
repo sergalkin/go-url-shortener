@@ -3,7 +3,7 @@ package handlers
 import (
 	"errors"
 	"github.com/go-chi/chi/v5"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -25,7 +25,7 @@ func (u *URLExpandHandlerMock) ExpandURL(key string) (string, error) {
 
 func TestNewURLExpandHandler(t *testing.T) {
 	type args struct {
-		service interfaces.URLExpand
+		service service.URLExpand
 	}
 	tests := []struct {
 		name string

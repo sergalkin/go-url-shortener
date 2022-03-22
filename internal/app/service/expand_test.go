@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
@@ -22,7 +22,7 @@ func (sm *expandStorageMock) Get(key string) (string, bool) {
 
 func TestNewURLExpandService(t *testing.T) {
 	type args struct {
-		storage interfaces.Storage
+		storage storage.Storage
 	}
 	tests := []struct {
 		name string
@@ -50,7 +50,7 @@ func TestNewURLExpandService(t *testing.T) {
 
 func TestURLExpandService_ExpandURL(t *testing.T) {
 	type fields struct {
-		storage interfaces.Storage
+		storage storage.Storage
 	}
 	type args struct {
 		key string

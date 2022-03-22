@@ -1,12 +1,16 @@
 package storage
 
 import (
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
 	"sync"
 )
 
+type Storage interface {
+	Store(key string, url string)
+	Get(key string) (string, bool)
+}
+
 // if Memory struct will no longer complains with Storage interface, code will be broken on building stage
-var _ interfaces.Storage = (*Memory)(nil)
+var _ Storage = (*Memory)(nil)
 
 type Memory struct {
 	mu   sync.Mutex

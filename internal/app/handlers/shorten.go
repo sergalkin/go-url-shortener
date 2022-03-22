@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"io"
 	"net/http"
 )
@@ -9,10 +9,10 @@ import (
 const host = "http://localhost:8080/"
 
 type URLShortenerHandler struct {
-	service interfaces.URLShorten
+	service service.URLShorten
 }
 
-func NewURLShortenerHandler(service interfaces.URLShorten) *URLShortenerHandler {
+func NewURLShortenerHandler(service service.URLShorten) *URLShortenerHandler {
 	return &URLShortenerHandler{
 		service: service,
 	}

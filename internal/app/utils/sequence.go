@@ -2,12 +2,15 @@ package utils
 
 import (
 	"errors"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
 	"math/rand"
 )
 
+type SequenceGenerator interface {
+	Generate(lettersNumber int) (string, error)
+}
+
 // if Sequence struct will no longer complains with Storage interface, code will be broken on building stage
-var _ interfaces.Sequence = (*Sequence)(nil)
+var _ SequenceGenerator = (*Sequence)(nil)
 
 type Sequence struct{}
 

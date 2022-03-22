@@ -1,15 +1,22 @@
 package service
 
-import "github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
+import (
+	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
+)
 
-var _ interfaces.URLShorten = (*URLShortenerService)(nil)
+var _ URLShorten = (*URLShortenerService)(nil)
 
-type URLShortenerService struct {
-	storage interfaces.Storage
-	seq     interfaces.Sequence
+type URLShorten interface {
+	ShortenURL(url string) (string, error)
 }
 
-func NewURLShortenerService(storage interfaces.Storage, seq interfaces.Sequence) *URLShortenerService {
+type URLShortenerService struct {
+	storage storage.Storage
+	seq     utils.SequenceGenerator
+}
+
+func NewURLShortenerService(storage storage.Storage, seq utils.SequenceGenerator) *URLShortenerService {
 	return &URLShortenerService{
 		storage: storage,
 		seq:     seq,

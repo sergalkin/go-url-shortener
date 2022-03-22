@@ -2,7 +2,8 @@ package service
 
 import (
 	"errors"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -34,8 +35,8 @@ func (s *sequenceMock) Generate(lettersNumber int) (string, error) {
 
 func TestNewURLShortenerService(t *testing.T) {
 	type args struct {
-		storage interfaces.Storage
-		seq     interfaces.Sequence
+		storage storage.Storage
+		seq     utils.SequenceGenerator
 	}
 	tests := []struct {
 		name string
@@ -63,8 +64,8 @@ func TestNewURLShortenerService(t *testing.T) {
 
 func TestURLShortenerService_ShortenURL(t *testing.T) {
 	type fields struct {
-		storage interfaces.Storage
-		seq     interfaces.Sequence
+		storage storage.Storage
+		seq     utils.SequenceGenerator
 	}
 	type args struct {
 		url string

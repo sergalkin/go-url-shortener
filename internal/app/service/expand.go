@@ -2,16 +2,20 @@ package service
 
 import (
 	"errors"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/interfaces"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 )
 
-var _ interfaces.URLExpand = (*URLExpandService)(nil)
-
-type URLExpandService struct {
-	storage interfaces.Storage
+type URLExpand interface {
+	ExpandURL(key string) (string, error)
 }
 
-func NewURLExpandService(storage interfaces.Storage) *URLExpandService {
+var _ URLExpand = (*URLExpandService)(nil)
+
+type URLExpandService struct {
+	storage storage.Storage
+}
+
+func NewURLExpandService(storage storage.Storage) *URLExpandService {
 	return &URLExpandService{
 		storage: storage,
 	}
