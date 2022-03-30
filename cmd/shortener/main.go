@@ -28,6 +28,10 @@ func main() {
 		r.Get("/{id}", expandHandler.ExpandURL)
 	})
 
+	r.Route("/api", func(r chi.Router) {
+		r.Post("/shorten", shortenHandler.ApiShortenURL)
+	})
+
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: r,

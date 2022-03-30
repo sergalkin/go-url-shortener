@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"io"
 	"net/http"
 )
@@ -47,4 +49,37 @@ func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Reques
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(host + key))
+}
+
+func (h *URLShortenerHandler) ApiShortenURL(w http.ResponseWriter, req *http.Request) {
+	requestData := struct {
+		Url string
+	}{}
+
+	responseData := struct {
+		Result string `json:"result,omitempty"`
+	}{}
+
+	if err := json.NewDecoder(req.Body).Decode(&requestData); err != nil {
+		utils.JSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if requestData.Url == "" {
+		utils.JSONError(w, "Body must have a link", http.StatusUnprocessableEntity)
+		return
+	}
+
+	key, shortenErr := h.service.ShortenURL(requestData.Url)
+
+	if shortenErr != nil {
+		utils.JSONError(w, shortenErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	responseData.Result = host + key
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(responseData)
 }
