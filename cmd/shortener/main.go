@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
@@ -33,7 +34,7 @@ func main() {
 	})
 
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    config.ServerAddress(),
 		Handler: r,
 	}
 

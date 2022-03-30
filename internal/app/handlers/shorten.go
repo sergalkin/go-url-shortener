@@ -2,13 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"io"
 	"net/http"
 )
-
-const host = "http://localhost:8080/"
 
 type URLShortenerHandler struct {
 	service service.URLShorten
@@ -48,7 +47,7 @@ func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Reques
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(host + key))
+	w.Write([]byte(config.BaseURL() + key))
 }
 
 func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Request) {
@@ -77,7 +76,8 @@ func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	responseData.Result = host + key
+	//responseData.Result = host + key
+	responseData.Result = config.BaseURL() + key
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
