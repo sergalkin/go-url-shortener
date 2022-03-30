@@ -76,7 +76,6 @@ func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	//responseData.Result = host + key
 	responseData.Result = config.BaseURL() + key
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
