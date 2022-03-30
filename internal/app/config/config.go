@@ -14,7 +14,7 @@ var cfg config
 
 func init() {
 	cfg = config{
-		serverAddress: "localhost:8080",
+		serverAddress: ":8080",
 		baseURL:       "http://localhost:8080/",
 	}
 
