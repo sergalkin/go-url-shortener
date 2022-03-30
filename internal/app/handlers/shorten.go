@@ -51,9 +51,9 @@ func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Reques
 	w.Write([]byte(host + key))
 }
 
-func (h *URLShortenerHandler) ApiShortenURL(w http.ResponseWriter, req *http.Request) {
+func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Request) {
 	requestData := struct {
-		Url string
+		URL string
 	}{}
 
 	responseData := struct {
@@ -65,12 +65,12 @@ func (h *URLShortenerHandler) ApiShortenURL(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	if requestData.Url == "" {
+	if requestData.URL == "" {
 		utils.JSONError(w, "Body must have a link", http.StatusUnprocessableEntity)
 		return
 	}
 
-	key, shortenErr := h.service.ShortenURL(requestData.Url)
+	key, shortenErr := h.service.ShortenURL(requestData.URL)
 
 	if shortenErr != nil {
 		utils.JSONError(w, shortenErr.Error(), http.StatusInternalServerError)

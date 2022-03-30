@@ -29,7 +29,7 @@ func main() {
 	})
 
 	r.Route("/api", func(r chi.Router) {
-		r.Post("/shorten", shortenHandler.ApiShortenURL)
+		r.Post("/shorten", shortenHandler.APIShortenURL)
 	})
 
 	server := &http.Server{
