@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
@@ -47,7 +48,7 @@ func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Reques
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(config.BaseURL() + key))
+	fmt.Fprintf(w, "%s/%s", config.BaseURL(), key)
 }
 
 func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Request) {
@@ -76,7 +77,7 @@ func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	responseData.Result = config.BaseURL() + key
+	responseData.Result = fmt.Sprintf("%s/%s", config.BaseURL(), key)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)

@@ -6,17 +6,14 @@ import (
 )
 
 type config struct {
-	serverAddress string `env:"SERVER_ADDRESS"`
-	baseURL       string `env:"BASE_URL"`
+	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 }
 
 var cfg config
 
 func init() {
-	cfg = config{
-		serverAddress: ":8080",
-		baseURL:       "http://localhost:8080/",
-	}
+	cfg = config{}
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
@@ -24,9 +21,9 @@ func init() {
 }
 
 func ServerAddress() string {
-	return cfg.serverAddress
+	return cfg.ServerAddress
 }
 
 func BaseURL() string {
-	return cfg.baseURL
+	return cfg.BaseURL
 }
