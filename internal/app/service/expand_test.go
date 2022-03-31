@@ -1,10 +1,12 @@
 package service
 
 import (
-	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 )
 
 type expandStorageMock struct {

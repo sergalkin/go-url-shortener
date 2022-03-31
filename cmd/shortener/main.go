@@ -1,16 +1,18 @@
 package main
 
 import (
+	"log"
+	"math/rand"
+	"net/http"
+	"time"
+
 	"github.com/go-chi/chi/v5"
+
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
-	"log"
-	"math/rand"
-	"net/http"
-	"time"
 )
 
 func main() {

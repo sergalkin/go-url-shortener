@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 )
 
 type URLExpandHandler struct {
