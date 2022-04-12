@@ -37,11 +37,11 @@ func NewFile(fileStoragePath string) *fileStore {
 
 func (m *fileStore) loadFromFile() error {
 	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	defer f.Close()
 
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
+	defer f.Close()
 
 	r := &urlRecord{}
 	scanner := bufio.NewScanner(f)
@@ -72,11 +72,11 @@ func (m *fileStore) Store(key, url string) {
 
 func (m *fileStore) saveToFile(key, url string) error {
 	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	defer f.Close()
 
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
+	defer f.Close()
 
 	e := json.NewEncoder(f)
 	return e.Encode(urlRecord{key, url})
