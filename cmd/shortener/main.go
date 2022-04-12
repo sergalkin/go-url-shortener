@@ -15,6 +15,10 @@ import (
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
+func init() {
+	config.NewConfig()
+}
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 

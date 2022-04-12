@@ -12,9 +12,9 @@ import (
 var _ Storage = (*fileStore)(nil)
 
 type fileStore struct {
-	mu   sync.Mutex
-	urls map[string]string
-	file *os.File
+	mu       sync.Mutex
+	urls     map[string]string
+	filePath string
 }
 
 type urlRecord struct {
@@ -24,18 +24,11 @@ type urlRecord struct {
 
 func NewFile(fileStoragePath string) *fileStore {
 	fs := fileStore{
-		urls: map[string]string{},
+		urls:     map[string]string{},
+		filePath: fileStoragePath,
 	}
 
-	f, err := os.OpenFile(fileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	fs.file = f
-
-	if err = fs.loadFromFile(); err != nil {
+	if err := fs.loadFromFile(); err != nil {
 		log.Fatalln(err.Error())
 	}
 
@@ -43,12 +36,15 @@ func NewFile(fileStoragePath string) *fileStore {
 }
 
 func (m *fileStore) loadFromFile() error {
-	if _, err := m.file.Seek(0, 0); err != nil {
-		return err
+	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	defer f.Close()
+
+	if err != nil {
+		log.Fatalln(err.Error())
 	}
 
 	r := &urlRecord{}
-	scanner := bufio.NewScanner(m.file)
+	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
 		if err := json.Unmarshal(scanner.Bytes(), r); err == nil {
@@ -75,7 +71,14 @@ func (m *fileStore) Store(key, url string) {
 }
 
 func (m *fileStore) saveToFile(key, url string) error {
-	e := json.NewEncoder(m.file)
+	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	defer f.Close()
+
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	e := json.NewEncoder(f)
 	return e.Encode(urlRecord{key, url})
 }
 

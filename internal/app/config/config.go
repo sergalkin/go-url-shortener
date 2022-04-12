@@ -12,6 +12,8 @@ type config struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:""`
 }
 
+type OptionConfig func(*config)
+
 var cfg config
 
 func init() {
@@ -19,6 +21,32 @@ func init() {
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
+	}
+}
+
+func NewConfig(opts ...OptionConfig) *config {
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	return &cfg
+}
+
+func WithServerAddress(addr string) OptionConfig {
+	return func(c *config) {
+		c.ServerAddress = addr
+	}
+}
+
+func WithBaseURL(baseURL string) OptionConfig {
+	return func(c *config) {
+		c.BaseURL = baseURL
+	}
+}
+
+func WithFileStoragePath(path string) OptionConfig {
+	return func(c *config) {
+		c.FileStoragePath = path
 	}
 }
 
