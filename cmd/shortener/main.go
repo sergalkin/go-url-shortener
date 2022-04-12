@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"math/rand"
 	"net/http"
@@ -16,7 +17,16 @@ import (
 )
 
 func init() {
-	config.NewConfig()
+	address := flag.String("a", "localhost:8080", "SERVER_ADDRESS")
+	baseURL := flag.String("b", "http://localhost:8080", "BASE_URL")
+	fileStoragePath := flag.String("f", "", "FILE_STORAGE_PATH")
+	flag.Parse()
+
+	config.NewConfig(
+		config.WithServerAddress(*address),
+		config.WithBaseURL(*baseURL),
+		config.WithFileStoragePath(*fileStoragePath),
+	)
 }
 
 func main() {
