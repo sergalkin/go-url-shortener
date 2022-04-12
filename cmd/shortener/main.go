@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -18,9 +17,9 @@ import (
 )
 
 func init() {
-	address := flag.String("a", os.Getenv("SERVER_ADDRESS"), "SERVER_ADDRESS")
-	baseURL := flag.String("b", os.Getenv("BASE_URL"), "BASE_URL")
-	fileStoragePath := flag.String("f", os.Getenv("FILE_STORAGE_PATH"), "FILE_STORAGE_PATH")
+	address := flag.String("a", config.ServerAddress(), "SERVER_ADDRESS")
+	baseURL := flag.String("b", config.BaseURL(), "BASE_URL")
+	fileStoragePath := flag.String("f", config.FileStoragePath(), "FILE_STORAGE_PATH")
 	flag.Parse()
 
 	config.NewConfig(
