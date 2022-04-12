@@ -4,11 +4,6 @@ import (
 	"sync"
 )
 
-type Storage interface {
-	Store(key string, url string)
-	Get(key string) (string, bool)
-}
-
 // if Memory struct will no longer complains with Storage interface, code will be broken on building stage
 var _ Storage = (*Memory)(nil)
 

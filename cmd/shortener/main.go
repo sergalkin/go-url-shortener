@@ -20,11 +20,11 @@ func main() {
 
 	r := chi.NewRouter()
 
-	memoryStorage := storage.NewMemory()
+	s := storage.NewStorage()
 	sequence := utils.NewSequence()
 
-	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(memoryStorage, sequence))
-	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(memoryStorage))
+	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence))
+	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s))
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", shortenHandler.ShortenURL)
