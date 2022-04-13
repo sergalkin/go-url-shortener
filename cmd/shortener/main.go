@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"log"
 	"math/rand"
 	"net/http"
@@ -33,6 +35,10 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	r := chi.NewRouter()
+	r.Use(
+		chiMiddleware.Compress(5),
+		middleware.Gzip,
+	)
 
 	s := storage.NewStorage()
 	sequence := utils.NewSequence()
