@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 )
 
