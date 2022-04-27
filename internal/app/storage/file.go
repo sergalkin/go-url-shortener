@@ -3,6 +3,7 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"log"
 	"os"
 	"sync"
@@ -14,6 +15,7 @@ var _ Storage = (*fileStore)(nil)
 type fileStore struct {
 	mu       sync.Mutex
 	urls     map[string]string
+	userURLs map[string][]UserURLs
 	filePath string
 }
 
@@ -25,6 +27,7 @@ type urlRecord struct {
 func NewFile(fileStoragePath string) *fileStore {
 	fs := fileStore{
 		urls:     map[string]string{},
+		userURLs: map[string][]UserURLs{},
 		filePath: fileStoragePath,
 	}
 
@@ -65,6 +68,9 @@ func (m *fileStore) Store(key, url string) {
 
 	m.urls[key] = url
 
+	userUID := middleware.GetUUID()
+	m.userURLs[userUID] = append(m.userURLs[userUID], UserURLs{ShortURL: key, OriginalURL: url})
+
 	if err := m.saveToFile(key, url); err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -88,4 +94,12 @@ func (m *fileStore) Get(key string) (string, bool) {
 
 	originalURL, ok := m.urls[key]
 	return originalURL, ok
+}
+
+func (m *fileStore) LinksByUUID(uuid string) ([]UserURLs, bool) {
+	defer m.mu.Unlock()
+	m.mu.Lock()
+
+	links, ok := m.userURLs[uuid]
+	return links, ok
 }

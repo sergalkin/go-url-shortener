@@ -18,12 +18,19 @@ func TestNewStorage(t *testing.T) {
 	}{
 		{
 			name: "Memory storage will be created if no filepath is provided",
-			want: &Memory{urls: map[string]string{}},
-			do:   func() {},
+			want: &Memory{
+				urls:     map[string]string{},
+				userURLs: map[string][]UserURLs{},
+			},
+			do: func() {},
 		},
 		{
 			name: "FileStorage will be created if filepath is provided",
-			want: &fileStore{urls: map[string]string{}, filePath: "tmp"},
+			want: &fileStore{
+				urls:     map[string]string{},
+				filePath: "tmp",
+				userURLs: map[string][]UserURLs{},
+			},
 			do: func() {
 				config.NewConfig(config.WithFileStoragePath("tmp"))
 			},

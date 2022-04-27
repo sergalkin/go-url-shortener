@@ -2,17 +2,17 @@ package main
 
 import (
 	"flag"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
@@ -38,6 +38,7 @@ func main() {
 	r.Use(
 		chiMiddleware.Compress(5),
 		middleware.Gzip,
+		middleware.Cookie,
 	)
 
 	s := storage.NewStorage()
@@ -53,6 +54,7 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/shorten", shortenHandler.APIShortenURL)
+		r.Get("/user/urls", expandHandler.UserURLs)
 	})
 
 	server := &http.Server{

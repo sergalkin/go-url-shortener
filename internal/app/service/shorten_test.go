@@ -14,6 +14,10 @@ type shortenStorageMock struct {
 	IsKeyFoundInStore bool
 }
 
+func (sm *shortenStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
+	return nil, true
+}
+
 func (sm *shortenStorageMock) Store(key string, url string) {}
 func (sm *shortenStorageMock) Get(key string) (string, bool) {
 	expandedURL := "https://github.com/"

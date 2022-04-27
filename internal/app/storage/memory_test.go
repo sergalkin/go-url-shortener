@@ -64,7 +64,8 @@ func TestMemory_Get(t *testing.T) {
 
 func TestMemory_Store(t *testing.T) {
 	type fields struct {
-		urls map[string]string
+		urls     map[string]string
+		userURLs map[string][]UserURLs
 	}
 	type args struct {
 		key string
@@ -80,7 +81,8 @@ func TestMemory_Store(t *testing.T) {
 		{
 			name: "Long URL can be stored in memory struct by it's short encoded sequence",
 			fields: fields{
-				urls: map[string]string{},
+				urls:     map[string]string{},
+				userURLs: map[string][]UserURLs{},
 			},
 			args:             args{"randomKey", "https://yandex.ru/"},
 			expectedLength:   1,
@@ -92,6 +94,7 @@ func TestMemory_Store(t *testing.T) {
 				urls: map[string]string{
 					"firstKey": "https://test.ru/test",
 				},
+				userURLs: map[string][]UserURLs{},
 			},
 			args:           args{"randomKey", "https://yandex.ru/"},
 			expectedLength: 2,
@@ -105,7 +108,8 @@ func TestMemory_Store(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Memory{
-				urls: tt.fields.urls,
+				urls:     tt.fields.urls,
+				userURLs: map[string][]UserURLs{},
 			}
 			m.Store(tt.args.key, tt.args.url)
 
@@ -122,7 +126,10 @@ func TestNewMemory(t *testing.T) {
 	}{
 		{
 			name: "Memory object can be created",
-			want: &Memory{urls: map[string]string{}},
+			want: &Memory{
+				urls:     map[string]string{},
+				userURLs: map[string][]UserURLs{},
+			},
 		},
 	}
 	for _, tt := range tests {
