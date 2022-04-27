@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -22,12 +24,14 @@ func init() {
 	address := flag.String("a", config.ServerAddress(), "SERVER_ADDRESS")
 	baseURL := flag.String("b", config.BaseURL(), "BASE_URL")
 	fileStoragePath := flag.String("f", config.FileStoragePath(), "FILE_STORAGE_PATH")
+	databaseDSN := flag.String("d", config.DatabaseDSN(), "DATABASE_DSN")
 	flag.Parse()
 
 	config.NewConfig(
 		config.WithServerAddress(*address),
 		config.WithBaseURL(*baseURL),
 		config.WithFileStoragePath(*fileStoragePath),
+		config.WithDatabaseConnection(*databaseDSN),
 	)
 }
 
@@ -44,12 +48,23 @@ func main() {
 	s := storage.NewStorage()
 	sequence := utils.NewSequence()
 
+	db, err := storage.NewDbConnection()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	defer db.Close(ctx)
+
 	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence))
 	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s))
+	dbHandler := handlers.NewDbHandler(db)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", shortenHandler.ShortenURL)
 		r.Get("/{id}", expandHandler.ExpandURL)
+		r.Get("/ping", dbHandler.Ping)
 	})
 
 	r.Route("/api", func(r chi.Router) {
