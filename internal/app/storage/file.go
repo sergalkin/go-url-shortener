@@ -3,7 +3,9 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"log"
 	"os"
 	"sync"
@@ -68,8 +70,13 @@ func (m *fileStore) Store(key, url string) {
 
 	m.urls[key] = url
 
-	userUID := middleware.GetUUID()
-	m.userURLs[userUID] = append(m.userURLs[userUID], UserURLs{ShortURL: key, OriginalURL: url})
+	var uuid string
+	err := utils.Decode(middleware.GetUUID(), &uuid)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: key, OriginalURL: url})
 
 	if err := m.saveToFile(key, url); err != nil {
 		log.Fatalln(err.Error())

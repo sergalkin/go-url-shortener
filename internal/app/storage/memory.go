@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
 // if Memory struct will no longer complains with Storage interface, code will be broken on building stage
@@ -33,8 +35,13 @@ func (m *Memory) Store(key string, url string) {
 
 	m.urls[key] = url
 
-	userUID := middleware.GetUUID()
-	m.userURLs[userUID] = append(m.userURLs[userUID], UserURLs{ShortURL: key, OriginalURL: url})
+	var uuid string
+	err := utils.Decode(middleware.GetUUID(), &uuid)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: key, OriginalURL: url})
 }
 
 func (m *Memory) Get(key string) (string, bool) {

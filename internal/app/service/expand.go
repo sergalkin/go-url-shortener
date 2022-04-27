@@ -2,9 +2,11 @@ package service
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
 type URLExpand interface {
@@ -34,7 +36,13 @@ func (u *URLExpandService) ExpandURL(key string) (string, error) {
 }
 
 func (u *URLExpandService) ExpandUserLinks() ([]storage.UserURLs, error) {
-	links, ok := u.storage.LinksByUUID(middleware.GetUUID())
+	var uuid string
+	err := utils.Decode(middleware.GetUUID(), &uuid)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	links, ok := u.storage.LinksByUUID(uuid)
 	if !ok {
 		return links, errors.New("this UUID doesnt have links")
 	}

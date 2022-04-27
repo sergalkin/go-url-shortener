@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"time"
 
 	"github.com/jackc/pgx/v4"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/migrations"
 )
 
@@ -23,7 +25,7 @@ type linkRow struct {
 	ID        int64
 	URLHash   string
 	URL       string
-	UUIDHASH  string
+	UID       uuid.UUID
 	CREATEDAT time.Time
 }
 
@@ -75,7 +77,13 @@ func (d *db) Store(key string, url string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	q := fmt.Sprintf("insert into links (url_hash, url, uuid_hash) values ('%s', '%s', '%s');", key, url, middleware.GetUUID())
+	var uid string
+	err := utils.Decode(middleware.GetUUID(), &uid)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	q := fmt.Sprintf("insert into links (url_hash, url, uid) values ('%s', '%s', '%s');", key, url, uid)
 
 	if _, err := d.conn.Exec(ctx, q); err != nil {
 		fmt.Println(err)
@@ -102,7 +110,7 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	q := fmt.Sprintf("select url_hash, url from links where uuid_hash = '%s'", uuid)
+	q := fmt.Sprintf("select url_hash, url from links where uid = '%s'", uuid)
 	rows, err := d.conn.Query(ctx, q)
 	if err != nil {
 		fmt.Println(err)
