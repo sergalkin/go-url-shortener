@@ -9,18 +9,18 @@ import (
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 )
 
-var _ Db = (*db)(nil)
+var _ DB = (*db)(nil)
 
 type db struct {
 	conn *pgx.Conn
 }
 
-type Db interface {
+type DB interface {
 	Ping(ctx context.Context) error
 	Close(ctx context.Context) error
 }
 
-func NewDbConnection() (*db, error) {
+func NewDBConnection() (*db, error) {
 	var database = &db{conn: nil}
 
 	if len(config.DatabaseDSN()) > 0 {

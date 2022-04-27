@@ -48,7 +48,7 @@ func main() {
 	s := storage.NewStorage()
 	sequence := utils.NewSequence()
 
-	db, err := storage.NewDbConnection()
+	db, err := storage.NewDBConnection()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -59,7 +59,7 @@ func main() {
 
 	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence))
 	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s))
-	dbHandler := handlers.NewDbHandler(db)
+	dbHandler := handlers.NewDBHandler(db)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", shortenHandler.ShortenURL)

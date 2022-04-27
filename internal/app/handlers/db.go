@@ -8,17 +8,17 @@ import (
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 )
 
-type DbHandler struct {
-	storage storage.Db
+type DBHandler struct {
+	storage storage.DB
 }
 
-func NewDbHandler(storage storage.Db) *DbHandler {
-	return &DbHandler{
+func NewDBHandler(storage storage.DB) *DBHandler {
+	return &DBHandler{
 		storage: storage,
 	}
 }
 
-func (h *DbHandler) Ping(w http.ResponseWriter, req *http.Request) {
+func (h *DBHandler) Ping(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), 1*time.Second)
 	defer cancel()
 
