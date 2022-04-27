@@ -104,12 +104,11 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 
 	q := fmt.Sprintf("select url_hash, url from links where uuid_hash = '%s'", uuid)
 	rows, err := d.conn.Query(ctx, q)
-	defer rows.Close()
-
 	if err != nil {
 		fmt.Println(err)
 		return userUrls, false
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var r linkRow
