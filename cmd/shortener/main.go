@@ -45,8 +45,14 @@ func main() {
 		middleware.Cookie,
 	)
 
-	s := storage.NewStorage()
+	s, err := storage.NewStorage()
+	if err != nil {
+		fmt.Println(err)
+	}
 	sequence := utils.NewSequence()
+
+	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence))
+	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s))
 
 	db, err := storage.NewDBConnection()
 	if err != nil {
@@ -56,9 +62,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	defer db.Close(ctx)
-
-	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence))
-	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s))
 	dbHandler := handlers.NewDBHandler(db)
 
 	r.Route("/", func(r chi.Router) {

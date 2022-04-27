@@ -8,12 +8,13 @@ type Storage interface {
 	LinksByUUID(uuid string) ([]UserURLs, bool)
 }
 
-func NewStorage() Storage {
-	fileStoragePath := config.FileStoragePath()
-
-	if fileStoragePath == "" {
-		return NewMemory()
+func NewStorage() (Storage, error) {
+	switch {
+	case config.DatabaseDSN() != "":
+		return NewDBConnection()
+	case config.FileStoragePath() != "":
+		return NewFile(config.FileStoragePath()), nil
+	default:
+		return NewMemory(), nil
 	}
-
-	return NewFile(fileStoragePath)
 }
