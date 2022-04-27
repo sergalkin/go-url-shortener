@@ -10,7 +10,7 @@ import (
 
 func Up() (bool, error) {
 	m, err := migrate.New(
-		"file://../../internal/app/migrations", config.DatabaseDSN())
+		"file://internal/app/migrations", config.DatabaseDSN())
 	if err != nil {
 		if err != migrate.ErrNoChange {
 			return false, err
