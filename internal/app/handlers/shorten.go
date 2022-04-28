@@ -43,16 +43,16 @@ func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Reques
 	}
 
 	key, shortenErr := h.service.ShortenURL(body)
-	hasConflictInUrl := errors.Is(shortenErr, utils.ErrLinksConflict)
+	hasConflictInURL := errors.Is(shortenErr, utils.ErrLinksConflict)
 
-	if shortenErr != nil && !hasConflictInUrl {
+	if shortenErr != nil && !hasConflictInURL {
 		http.Error(w, shortenErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	if hasConflictInUrl {
+	if hasConflictInURL {
 		w.WriteHeader(http.StatusConflict)
 	} else {
 		w.WriteHeader(http.StatusCreated)
@@ -81,9 +81,9 @@ func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Req
 	}
 
 	key, shortenErr := h.service.ShortenURL(requestData.URL)
-	hasConflictInUrl := errors.Is(shortenErr, utils.ErrLinksConflict)
+	hasConflictInURL := errors.Is(shortenErr, utils.ErrLinksConflict)
 
-	if shortenErr != nil && !hasConflictInUrl {
+	if shortenErr != nil && !hasConflictInURL {
 		utils.JSONError(w, shortenErr.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -92,7 +92,7 @@ func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Req
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	if hasConflictInUrl {
+	if hasConflictInURL {
 		w.WriteHeader(http.StatusConflict)
 	} else {
 		w.WriteHeader(http.StatusCreated)

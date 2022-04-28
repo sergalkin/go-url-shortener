@@ -111,6 +111,9 @@ func (d *db) Store(key *string, url string) {
 
 		var tempKey *string
 		err = row.Scan(&tempKey)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 
 		*key = *tempKey
 	}
