@@ -32,7 +32,13 @@ func (u *URLShortenerService) ShortenURL(url string) (string, error) {
 
 		_, ok := u.storage.Get(key)
 		if !ok {
+			keyBeforeStore := key
 			u.storage.Store(&key, url)
+
+			if keyBeforeStore != key {
+				return key, utils.LinksConflictError
+			}
+
 			return key, nil
 		}
 	}

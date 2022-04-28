@@ -17,7 +17,7 @@ func (sm *expandStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool)
 	return nil, true
 }
 
-func (sm *expandStorageMock) Store(key string, url string) {}
+func (sm *expandStorageMock) Store(key *string, url string) {}
 func (sm *expandStorageMock) Get(key string) (string, bool) {
 	expandedURL := "https://github.com/"
 	if !sm.IsKeyFoundInStore {

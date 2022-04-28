@@ -111,7 +111,7 @@ func TestMemory_Store(t *testing.T) {
 				urls:     tt.fields.urls,
 				userURLs: map[string][]UserURLs{},
 			}
-			m.Store(tt.args.key, tt.args.url)
+			m.Store(&tt.args.key, tt.args.url)
 
 			assert.Len(t, m.urls, tt.expectedLength)
 			reflect.DeepEqual(m.urls, tt.expectedElements)

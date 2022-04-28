@@ -122,7 +122,7 @@ func Test_fileStore_Store(t *testing.T) {
 				filePath: tt.fields.filePath,
 				userURLs: map[string][]UserURLs{},
 			}
-			m.Store(tt.args.key, tt.args.url)
+			m.Store(&tt.args.key, tt.args.url)
 			assert.NotEmpty(t, m.urls)
 		})
 	}
