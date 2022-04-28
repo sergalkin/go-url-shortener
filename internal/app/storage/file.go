@@ -76,13 +76,13 @@ func (m *fileStore) Store(key *string, url string) {
 	var uuid string
 	err := utils.Decode(middleware.GetUUID(), &uuid)
 	if err != nil {
-		//m.logger.Error(err.Error(), zap.Error(err))
+		m.logger.Error(err.Error(), zap.Error(err))
 	}
 
 	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})
 
 	if err := m.saveToFile(*key, url); err != nil {
-		//m.logger.Fatal(err.Error())
+		m.logger.Fatal(err.Error())
 	}
 }
 
