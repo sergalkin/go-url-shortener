@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -107,10 +109,9 @@ func TestMemory_Store(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &Memory{
-				urls:     tt.fields.urls,
-				userURLs: map[string][]UserURLs{},
-			}
+			m := NewMemory(zap.NewNop())
+			m.urls = tt.fields.urls
+
 			m.Store(&tt.args.key, tt.args.url)
 
 			assert.Len(t, m.urls, tt.expectedLength)
@@ -129,12 +130,13 @@ func TestNewMemory(t *testing.T) {
 			want: &Memory{
 				urls:     map[string]string{},
 				userURLs: map[string][]UserURLs{},
+				logger:   &zap.Logger{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, NewMemory())
+			require.Equal(t, tt.want, NewMemory(&zap.Logger{}))
 		})
 	}
 }

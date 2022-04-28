@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,12 +59,13 @@ func TestNewURLShortenerService(t *testing.T) {
 			want: &URLShortenerService{
 				storage: &shortenStorageMock{},
 				seq:     &sequenceMock{},
+				logger:  zap.NewNop(),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, NewURLShortenerService(tt.args.storage, tt.args.seq), "NewURLShortenerService(%v, %v)", tt.args.storage, tt.args.seq)
+			assert.Equalf(t, tt.want, NewURLShortenerService(tt.args.storage, tt.args.seq, zap.NewNop()), "NewURLShortenerService(%v, %v)", tt.args.storage, tt.args.seq)
 		})
 	}
 }
@@ -108,10 +110,8 @@ func TestURLShortenerService_ShortenURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &URLShortenerService{
-				storage: tt.fields.storage,
-				seq:     tt.fields.seq,
-			}
+			u := NewURLShortenerService(tt.fields.storage, tt.fields.seq, zap.NewNop())
+
 			got, err := u.ShortenURL(tt.args.url)
 			if err != nil {
 				assert.Empty(t, got)

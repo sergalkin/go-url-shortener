@@ -1,8 +1,9 @@
 package storage
 
 import (
-	"fmt"
 	"sync"
+
+	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
@@ -15,6 +16,7 @@ type Memory struct {
 	mu       sync.Mutex
 	urls     map[string]string
 	userURLs map[string][]UserURLs
+	logger   *zap.Logger
 }
 
 type UserURLs struct {
@@ -22,10 +24,11 @@ type UserURLs struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func NewMemory() *Memory {
+func NewMemory(l *zap.Logger) *Memory {
 	return &Memory{
 		urls:     map[string]string{},
 		userURLs: map[string][]UserURLs{},
+		logger:   l,
 	}
 }
 
@@ -38,7 +41,7 @@ func (m *Memory) Store(key *string, url string) {
 	var uuid string
 	err := utils.Decode(middleware.GetUUID(), &uuid)
 	if err != nil {
-		fmt.Println(err)
+		m.logger.Error(err.Error(), zap.Error(err))
 	}
 
 	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})

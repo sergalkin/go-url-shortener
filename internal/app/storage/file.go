@@ -3,12 +3,13 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
-	"log"
 	"os"
 	"sync"
+
+	"go.uber.org/zap"
+
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
 // if File struct will no longer complains with Storage interface, code will be broken on building stage
@@ -19,6 +20,7 @@ type fileStore struct {
 	urls     map[string]string
 	userURLs map[string][]UserURLs
 	filePath string
+	logger   *zap.Logger
 }
 
 type urlRecord struct {
@@ -26,15 +28,16 @@ type urlRecord struct {
 	URL string `json:"URL"`
 }
 
-func NewFile(fileStoragePath string) *fileStore {
+func NewFile(fileStoragePath string, l *zap.Logger) *fileStore {
 	fs := fileStore{
 		urls:     map[string]string{},
 		userURLs: map[string][]UserURLs{},
 		filePath: fileStoragePath,
+		logger:   l,
 	}
 
 	if err := fs.loadFromFile(); err != nil {
-		log.Fatalln(err.Error())
+		l.Fatal(err.Error())
 	}
 
 	return &fs
@@ -44,7 +47,7 @@ func (m *fileStore) loadFromFile() error {
 	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 
 	if err != nil {
-		log.Fatalln(err.Error())
+		m.logger.Fatal(err.Error())
 	}
 	defer f.Close()
 
@@ -73,13 +76,13 @@ func (m *fileStore) Store(key *string, url string) {
 	var uuid string
 	err := utils.Decode(middleware.GetUUID(), &uuid)
 	if err != nil {
-		fmt.Println(err)
+		//m.logger.Error(err.Error(), zap.Error(err))
 	}
 
 	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})
 
 	if err := m.saveToFile(*key, url); err != nil {
-		log.Fatalln(err.Error())
+		//m.logger.Fatal(err.Error())
 	}
 }
 
@@ -87,7 +90,7 @@ func (m *fileStore) saveToFile(key, url string) error {
 	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 
 	if err != nil {
-		log.Fatalln(err.Error())
+		m.logger.Fatal(err.Error())
 	}
 	defer f.Close()
 

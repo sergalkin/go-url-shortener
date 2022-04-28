@@ -1,11 +1,11 @@
 package storage
 
 import (
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"log"
 	"os"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 )
@@ -21,6 +21,7 @@ func TestNewStorage(t *testing.T) {
 			want: &Memory{
 				urls:     map[string]string{},
 				userURLs: map[string][]UserURLs{},
+				logger:   &zap.Logger{},
 			},
 			do: func() {},
 		},
@@ -30,6 +31,7 @@ func TestNewStorage(t *testing.T) {
 				urls:     map[string]string{},
 				filePath: "tmp",
 				userURLs: map[string][]UserURLs{},
+				logger:   &zap.Logger{},
 			},
 			do: func() {
 				config.NewConfig(config.WithFileStoragePath("tmp"))
@@ -39,7 +41,7 @@ func TestNewStorage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.do()
-			s, _ := NewStorage()
+			s, _ := NewStorage(&zap.Logger{})
 			assert.Equal(t, tt.want, s)
 		})
 	}

@@ -2,7 +2,8 @@ package service
 
 import (
 	"errors"
-	"fmt"
+
+	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
@@ -18,11 +19,13 @@ var _ URLExpand = (*URLExpandService)(nil)
 
 type URLExpandService struct {
 	storage storage.Storage
+	logger  *zap.Logger
 }
 
-func NewURLExpandService(storage storage.Storage) *URLExpandService {
+func NewURLExpandService(storage storage.Storage, l *zap.Logger) *URLExpandService {
 	return &URLExpandService{
 		storage: storage,
+		logger:  l,
 	}
 }
 
@@ -39,7 +42,7 @@ func (u *URLExpandService) ExpandUserLinks() ([]storage.UserURLs, error) {
 	var uuid string
 	err := utils.Decode(middleware.GetUUID(), &uuid)
 	if err != nil {
-		fmt.Println(err)
+		u.logger.Error(err.Error(), zap.Error(err))
 	}
 
 	links, ok := u.storage.LinksByUUID(uuid)

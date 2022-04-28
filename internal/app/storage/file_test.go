@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"log"
 	"os"
 	"testing"
@@ -17,12 +18,17 @@ func TestNewFile(t *testing.T) {
 		{
 			name: "File store can be created",
 			path: "tmp",
-			want: &fileStore{urls: map[string]string{}, filePath: "tmp", userURLs: map[string][]UserURLs{}},
+			want: &fileStore{
+				urls:     map[string]string{},
+				filePath: "tmp",
+				userURLs: map[string][]UserURLs{},
+				logger:   &zap.Logger{},
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, NewFile(tt.path), "NewFile(%v)", tt.path)
+			assert.Equal(t, tt.want, NewFile(tt.path, &zap.Logger{}), "NewFile(%v)", tt.path)
 		})
 	}
 
@@ -117,13 +123,11 @@ func Test_fileStore_Store(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &fileStore{
-				urls:     tt.fields.urls,
-				filePath: tt.fields.filePath,
-				userURLs: map[string][]UserURLs{},
-			}
-			m.Store(&tt.args.key, tt.args.url)
-			assert.NotEmpty(t, m.urls)
+			fs := NewFile(tt.fields.filePath, &zap.Logger{})
+			fs.urls = tt.fields.urls
+
+			fs.Store(&tt.args.key, tt.args.url)
+			assert.NotEmpty(t, fs.urls)
 		})
 	}
 

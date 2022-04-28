@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
@@ -36,6 +37,12 @@ func init() {
 }
 
 func main() {
+	logger, err := zap.NewProduction()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer logger.Sync()
+
 	rand.Seed(time.Now().UnixNano())
 
 	r := chi.NewRouter()
@@ -45,16 +52,16 @@ func main() {
 		middleware.Cookie,
 	)
 
-	s, err := storage.NewStorage()
+	s, err := storage.NewStorage(logger)
 	if err != nil {
 		fmt.Println(err)
 	}
 	sequence := utils.NewSequence()
 
-	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence))
-	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s))
+	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence, logger))
+	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s, logger))
 
-	db, err := storage.NewDBConnection()
+	db, err := storage.NewDBConnection(logger)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -62,8 +69,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	defer db.Close(ctx)
-	dbHandler := handlers.NewDBHandler(db)
-	batchHandler := handlers.NewBatchHandler(db)
+	dbHandler := handlers.NewDBHandler(db, logger)
+	batchHandler := handlers.NewBatchHandler(db, logger)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", shortenHandler.ShortenURL)

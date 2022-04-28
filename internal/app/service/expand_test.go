@@ -1,6 +1,7 @@
 package service
 
 import (
+	"go.uber.org/zap"
 	"reflect"
 	"testing"
 
@@ -42,12 +43,13 @@ func TestNewURLExpandService(t *testing.T) {
 			},
 			want: &URLExpandService{
 				storage: &expandStorageMock{},
+				logger:  &zap.Logger{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewURLExpandService(tt.args.storage); !reflect.DeepEqual(got, tt.want) {
+			if got := NewURLExpandService(tt.args.storage, &zap.Logger{}); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewURLExpandService() = %v, want %v", got, tt.want)
 			}
 		})

@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
+	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
@@ -18,7 +19,8 @@ import (
 var _ DB = (*db)(nil)
 
 type db struct {
-	conn *pgx.Conn
+	conn   *pgx.Conn
+	logger *zap.Logger
 }
 
 type linkRow struct {
@@ -49,8 +51,8 @@ type DB interface {
 	BatchInsert([]BatchRequest) ([]BatchLink, error)
 }
 
-func NewDBConnection() (*db, error) {
-	var database = &db{conn: nil}
+func NewDBConnection(l *zap.Logger) (*db, error) {
+	var database = &db{conn: nil, logger: l}
 
 	if len(config.DatabaseDSN()) > 0 {
 		conn, err := pgx.Connect(context.Background(), config.DatabaseDSN())
@@ -92,7 +94,7 @@ func (d *db) Store(key *string, url string) {
 	var uid string
 	err := utils.Decode(middleware.GetUUID(), &uid)
 	if err != nil {
-		fmt.Println(err)
+		d.logger.Error(err.Error(), zap.Error(err))
 	}
 
 	q := fmt.Sprintf(
@@ -102,7 +104,7 @@ func (d *db) Store(key *string, url string) {
 
 	r, err := d.conn.Exec(ctx, q)
 	if err != nil {
-		fmt.Println(err)
+		d.logger.Error(err.Error(), zap.Error(err))
 	}
 
 	if r.RowsAffected() == 0 {
@@ -112,7 +114,7 @@ func (d *db) Store(key *string, url string) {
 		var tempKey *string
 		err = row.Scan(&tempKey)
 		if err != nil {
-			fmt.Println(err.Error())
+			d.logger.Error(err.Error(), zap.Error(err))
 		}
 
 		*key = *tempKey
@@ -127,6 +129,7 @@ func (d *db) Get(key string) (string, bool) {
 
 	q := fmt.Sprintf("select url from links where url_hash = '%s'", key)
 	if err := d.conn.QueryRow(ctx, q).Scan(&url); err != nil {
+		d.logger.Error(err.Error(), zap.Error(err))
 		return "", false
 	}
 
@@ -142,7 +145,7 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	q := fmt.Sprintf("select url_hash, url from links where uid = '%s'", uuid)
 	rows, err := d.conn.Query(ctx, q)
 	if err != nil {
-		fmt.Println(err)
+		d.logger.Error(err.Error(), zap.Error(err))
 		return userUrls, false
 	}
 	defer rows.Close()
@@ -150,7 +153,7 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	for rows.Next() {
 		var r linkRow
 		if err := rows.Scan(&r.URLHash, &r.URL); err != nil {
-			fmt.Println(err)
+			d.logger.Error(err.Error(), zap.Error(err))
 			return userUrls, false
 		}
 
@@ -162,7 +165,7 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 
 	err = rows.Err()
 	if err != nil {
-		fmt.Println(err)
+		d.logger.Error(err.Error(), zap.Error(err))
 		return userUrls, false
 	}
 

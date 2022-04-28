@@ -5,16 +5,20 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 )
 
 type DBHandler struct {
 	storage storage.DB
+	logger  *zap.Logger
 }
 
-func NewDBHandler(storage storage.DB) *DBHandler {
+func NewDBHandler(storage storage.DB, l *zap.Logger) *DBHandler {
 	return &DBHandler{
 		storage: storage,
+		logger:  l,
 	}
 }
 
@@ -24,6 +28,7 @@ func (h *DBHandler) Ping(w http.ResponseWriter, req *http.Request) {
 
 	err := h.storage.Ping(ctx)
 	if err != nil {
+		h.logger.Error(err.Error(), zap.Error(err))
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusInternalServerError)
 		return

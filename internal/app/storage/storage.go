@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/sergalkin/go-url-shortener.git/internal/app/config"
+import (
+	"go.uber.org/zap"
+
+	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
+)
 
 type Storage interface {
 	Store(key *string, url string)
@@ -8,13 +12,13 @@ type Storage interface {
 	LinksByUUID(uuid string) ([]UserURLs, bool)
 }
 
-func NewStorage() (Storage, error) {
+func NewStorage(l *zap.Logger) (Storage, error) {
 	switch {
 	case config.DatabaseDSN() != "":
-		return NewDBConnection()
+		return NewDBConnection(l)
 	case config.FileStoragePath() != "":
-		return NewFile(config.FileStoragePath()), nil
+		return NewFile(config.FileStoragePath(), l), nil
 	default:
-		return NewMemory(), nil
+		return NewMemory(l), nil
 	}
 }
