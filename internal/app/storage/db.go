@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/migrations"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
 var _ DB = (*db)(nil)
@@ -22,11 +22,22 @@ type db struct {
 }
 
 type linkRow struct {
-	ID        int64
-	URLHash   string
-	URL       string
-	UID       uuid.UUID
-	CREATEDAT time.Time
+	ID            int64
+	URLHash       string
+	URL           string
+	UID           uuid.UUID
+	CreatedAt     time.Time
+	CorrelationID string
+}
+
+type BatchRequest struct {
+	CorrelationID string `json:"correlation_id"`
+	OriginalURL   string `json:"original_url"`
+}
+
+type BatchLink struct {
+	CorrelationID string `json:"correlation_id"`
+	ShortURL      string `json:"short_url"`
 }
 
 type DB interface {
@@ -35,6 +46,7 @@ type DB interface {
 	Store(key string, url string)
 	Get(key string) (string, bool)
 	LinksByUUID(uuid string) ([]UserURLs, bool)
+	BatchInsert([]BatchRequest) ([]BatchLink, error)
 }
 
 func NewDBConnection() (*db, error) {
@@ -142,4 +154,48 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	}
 
 	return userUrls, true
+}
+
+func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	tx, err := d.conn.Begin(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer tx.Rollback(ctx)
+
+	seqGenerator := utils.NewSequence()
+	batchLinks := make([]BatchLink, 0)
+
+	var uid string
+	err = utils.Decode(middleware.GetUUID(), &uid)
+	if err != nil {
+		return []BatchLink{}, err
+	}
+
+	q := "insert into links(url_hash, url, uid, correlation_id) values ($1, $2, $3, $4)"
+	for _, val := range br {
+		urlHash, err := seqGenerator.Generate(5)
+		if err != nil {
+			return []BatchLink{}, err
+		}
+
+		_, err = tx.Exec(ctx, q, urlHash, val.OriginalURL, uid, val.CorrelationID)
+		if err != nil {
+			return []BatchLink{}, err
+		}
+		batchLinks = append(batchLinks, BatchLink{
+			CorrelationID: val.CorrelationID,
+			ShortURL:      config.BaseURL() + "/" + urlHash,
+		})
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return []BatchLink{}, err
+	}
+
+	return batchLinks, nil
 }

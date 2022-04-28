@@ -63,6 +63,7 @@ func main() {
 	defer cancel()
 	defer db.Close(ctx)
 	dbHandler := handlers.NewDBHandler(db)
+	batchHandler := handlers.NewBatchHandler(db)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", shortenHandler.ShortenURL)
@@ -72,6 +73,7 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/shorten", shortenHandler.APIShortenURL)
+		r.Post("/shorten/batch", batchHandler.BatchInsert)
 		r.Get("/user/urls", expandHandler.UserURLs)
 	})
 
