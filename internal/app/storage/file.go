@@ -64,11 +64,11 @@ func (m *fileStore) loadFromFile() error {
 	return nil
 }
 
-func (m *fileStore) Store(key, url string) {
+func (m *fileStore) Store(key *string, url string) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
 
-	m.urls[key] = url
+	m.urls[*key] = url
 
 	var uuid string
 	err := utils.Decode(middleware.GetUUID(), &uuid)
@@ -76,9 +76,9 @@ func (m *fileStore) Store(key, url string) {
 		fmt.Println(err)
 	}
 
-	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: key, OriginalURL: url})
+	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})
 
-	if err := m.saveToFile(key, url); err != nil {
+	if err := m.saveToFile(*key, url); err != nil {
 		log.Fatalln(err.Error())
 	}
 }

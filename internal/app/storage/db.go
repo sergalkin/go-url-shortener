@@ -43,7 +43,7 @@ type BatchLink struct {
 type DB interface {
 	Ping(ctx context.Context) error
 	Close(ctx context.Context) error
-	Store(key string, url string)
+	Store(key *string, url string)
 	Get(key string) (string, bool)
 	LinksByUUID(uuid string) ([]UserURLs, bool)
 	BatchInsert([]BatchRequest) ([]BatchLink, error)
@@ -85,7 +85,7 @@ func (d *db) Close(ctx context.Context) error {
 	return d.conn.Close(ctx)
 }
 
-func (d *db) Store(key string, url string) {
+func (d *db) Store(key *string, url string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -95,10 +95,24 @@ func (d *db) Store(key string, url string) {
 		fmt.Println(err)
 	}
 
-	q := fmt.Sprintf("insert into links (url_hash, url, uid) values ('%s', '%s', '%s');", key, url, uid)
+	q := fmt.Sprintf(
+		"insert into links (url_hash, url, uid) values ('%s', '%s', '%s') "+
+			"ON CONFLICT ON CONSTRAINT links_url_key DO NOTHING", *key, url, uid,
+	)
 
-	if _, err := d.conn.Exec(ctx, q); err != nil {
+	r, err := d.conn.Exec(ctx, q)
+	if err != nil {
 		fmt.Println(err)
+	}
+
+	if r.RowsAffected() == 0 {
+		q = "select url_hash from links where url = $1"
+		row := d.conn.QueryRow(ctx, q, url)
+
+		var tempKey *string
+		err = row.Scan(&tempKey)
+
+		*key = *tempKey
 	}
 }
 

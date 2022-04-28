@@ -29,11 +29,11 @@ func NewMemory() *Memory {
 	}
 }
 
-func (m *Memory) Store(key string, url string) {
+func (m *Memory) Store(key *string, url string) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
 
-	m.urls[key] = url
+	m.urls[*key] = url
 
 	var uuid string
 	err := utils.Decode(middleware.GetUUID(), &uuid)
@@ -41,7 +41,7 @@ func (m *Memory) Store(key string, url string) {
 		fmt.Println(err)
 	}
 
-	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: key, OriginalURL: url})
+	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})
 }
 
 func (m *Memory) Get(key string) (string, bool) {
