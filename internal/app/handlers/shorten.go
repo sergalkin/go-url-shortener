@@ -43,7 +43,7 @@ func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Reques
 	}
 
 	key, shortenErr := h.service.ShortenURL(body)
-	hasConflictInUrl := errors.Is(shortenErr, utils.LinksConflictError)
+	hasConflictInUrl := errors.Is(shortenErr, utils.ErrLinksConflict)
 
 	if shortenErr != nil && !hasConflictInUrl {
 		http.Error(w, shortenErr.Error(), http.StatusInternalServerError)
@@ -81,7 +81,7 @@ func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Req
 	}
 
 	key, shortenErr := h.service.ShortenURL(requestData.URL)
-	hasConflictInUrl := errors.Is(shortenErr, utils.LinksConflictError)
+	hasConflictInUrl := errors.Is(shortenErr, utils.ErrLinksConflict)
 
 	if shortenErr != nil && !hasConflictInUrl {
 		utils.JSONError(w, shortenErr.Error(), http.StatusInternalServerError)
