@@ -10,6 +10,7 @@ type config struct {
 	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:""`
+	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:""`
 }
 
 type OptionConfig func(*config)
@@ -50,6 +51,12 @@ func WithFileStoragePath(path string) OptionConfig {
 	}
 }
 
+func WithDatabaseConnection(addr string) OptionConfig {
+	return func(c *config) {
+		c.DatabaseDSN = addr
+	}
+}
+
 func ServerAddress() string {
 	return cfg.ServerAddress
 }
@@ -60,4 +67,8 @@ func BaseURL() string {
 
 func FileStoragePath() string {
 	return cfg.FileStoragePath
+}
+
+func DatabaseDSN() string {
+	return cfg.DatabaseDSN
 }

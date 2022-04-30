@@ -1,18 +1,21 @@
 package main
 
 import (
+	"context"
 	"flag"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
@@ -22,37 +25,63 @@ func init() {
 	address := flag.String("a", config.ServerAddress(), "SERVER_ADDRESS")
 	baseURL := flag.String("b", config.BaseURL(), "BASE_URL")
 	fileStoragePath := flag.String("f", config.FileStoragePath(), "FILE_STORAGE_PATH")
+	databaseDSN := flag.String("d", config.DatabaseDSN(), "DATABASE_DSN")
 	flag.Parse()
 
 	config.NewConfig(
 		config.WithServerAddress(*address),
 		config.WithBaseURL(*baseURL),
 		config.WithFileStoragePath(*fileStoragePath),
+		config.WithDatabaseConnection(*databaseDSN),
 	)
 }
 
 func main() {
+	logger, err := zap.NewProduction()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer logger.Sync()
+
 	rand.Seed(time.Now().UnixNano())
 
 	r := chi.NewRouter()
 	r.Use(
 		chiMiddleware.Compress(5),
 		middleware.Gzip,
+		middleware.Cookie,
 	)
 
-	s := storage.NewStorage()
+	s, err := storage.NewStorage(logger)
+	if err != nil {
+		fmt.Println(err)
+	}
 	sequence := utils.NewSequence()
 
-	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence))
-	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s))
+	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence, logger))
+	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s, logger))
+
+	db, err := storage.NewDBConnection(logger)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	defer db.Close(ctx)
+	dbHandler := handlers.NewDBHandler(db, logger)
+	batchHandler := handlers.NewBatchHandler(db, logger)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", shortenHandler.ShortenURL)
 		r.Get("/{id}", expandHandler.ExpandURL)
+		r.Get("/ping", dbHandler.Ping)
 	})
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/shorten", shortenHandler.APIShortenURL)
+		r.Post("/shorten/batch", batchHandler.BatchInsert)
+		r.Get("/user/urls", expandHandler.UserURLs)
 	})
 
 	server := &http.Server{

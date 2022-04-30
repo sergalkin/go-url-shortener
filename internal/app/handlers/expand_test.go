@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +17,10 @@ import (
 
 type URLExpandHandlerMock struct {
 	hasErrorInExpandingURL bool
+}
+
+func (u *URLExpandHandlerMock) ExpandUserLinks() ([]storage.UserURLs, error) {
+	return nil, nil
 }
 
 func (u *URLExpandHandlerMock) ExpandURL(key string) (string, error) {

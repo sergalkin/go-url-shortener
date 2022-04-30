@@ -2,8 +2,11 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
+
+var ErrLinksConflict = errors.New("url has been already stored")
 
 func JSONError(w http.ResponseWriter, err interface{}, code int) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

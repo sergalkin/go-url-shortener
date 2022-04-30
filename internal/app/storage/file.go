@@ -3,9 +3,13 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
-	"log"
 	"os"
 	"sync"
+
+	"go.uber.org/zap"
+
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
 // if File struct will no longer complains with Storage interface, code will be broken on building stage
@@ -14,7 +18,9 @@ var _ Storage = (*fileStore)(nil)
 type fileStore struct {
 	mu       sync.Mutex
 	urls     map[string]string
+	userURLs map[string][]UserURLs
 	filePath string
+	logger   *zap.Logger
 }
 
 type urlRecord struct {
@@ -22,14 +28,16 @@ type urlRecord struct {
 	URL string `json:"URL"`
 }
 
-func NewFile(fileStoragePath string) *fileStore {
+func NewFile(fileStoragePath string, l *zap.Logger) *fileStore {
 	fs := fileStore{
 		urls:     map[string]string{},
+		userURLs: map[string][]UserURLs{},
 		filePath: fileStoragePath,
+		logger:   l,
 	}
 
 	if err := fs.loadFromFile(); err != nil {
-		log.Fatalln(err.Error())
+		l.Fatal(err.Error())
 	}
 
 	return &fs
@@ -39,7 +47,7 @@ func (m *fileStore) loadFromFile() error {
 	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 
 	if err != nil {
-		log.Fatalln(err.Error())
+		m.logger.Fatal(err.Error())
 	}
 	defer f.Close()
 
@@ -59,14 +67,22 @@ func (m *fileStore) loadFromFile() error {
 	return nil
 }
 
-func (m *fileStore) Store(key, url string) {
+func (m *fileStore) Store(key *string, url string) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
 
-	m.urls[key] = url
+	m.urls[*key] = url
 
-	if err := m.saveToFile(key, url); err != nil {
-		log.Fatalln(err.Error())
+	var uuid string
+	err := utils.Decode(middleware.GetUUID(), &uuid)
+	if err != nil {
+		m.logger.Error(err.Error(), zap.Error(err))
+	}
+
+	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})
+
+	if err := m.saveToFile(*key, url); err != nil {
+		m.logger.Fatal(err.Error())
 	}
 }
 
@@ -74,7 +90,7 @@ func (m *fileStore) saveToFile(key, url string) error {
 	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 
 	if err != nil {
-		log.Fatalln(err.Error())
+		m.logger.Fatal(err.Error())
 	}
 	defer f.Close()
 
@@ -88,4 +104,12 @@ func (m *fileStore) Get(key string) (string, bool) {
 
 	originalURL, ok := m.urls[key]
 	return originalURL, ok
+}
+
+func (m *fileStore) LinksByUUID(uuid string) ([]UserURLs, bool) {
+	defer m.mu.Unlock()
+	m.mu.Lock()
+
+	links, ok := m.userURLs[uuid]
+	return links, ok
 }

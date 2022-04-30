@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +15,11 @@ type shortenStorageMock struct {
 	IsKeyFoundInStore bool
 }
 
-func (sm *shortenStorageMock) Store(key string, url string) {}
+func (sm *shortenStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
+	return nil, true
+}
+
+func (sm *shortenStorageMock) Store(key *string, url string) {}
 func (sm *shortenStorageMock) Get(key string) (string, bool) {
 	expandedURL := "https://github.com/"
 	if !sm.IsKeyFoundInStore {
@@ -54,12 +59,13 @@ func TestNewURLShortenerService(t *testing.T) {
 			want: &URLShortenerService{
 				storage: &shortenStorageMock{},
 				seq:     &sequenceMock{},
+				logger:  zap.NewNop(),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, NewURLShortenerService(tt.args.storage, tt.args.seq), "NewURLShortenerService(%v, %v)", tt.args.storage, tt.args.seq)
+			assert.Equalf(t, tt.want, NewURLShortenerService(tt.args.storage, tt.args.seq, zap.NewNop()), "NewURLShortenerService(%v, %v)", tt.args.storage, tt.args.seq)
 		})
 	}
 }
@@ -104,10 +110,8 @@ func TestURLShortenerService_ShortenURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &URLShortenerService{
-				storage: tt.fields.storage,
-				seq:     tt.fields.seq,
-			}
+			u := NewURLShortenerService(tt.fields.storage, tt.fields.seq, zap.NewNop())
+
 			got, err := u.ShortenURL(tt.args.url)
 			if err != nil {
 				assert.Empty(t, got)
