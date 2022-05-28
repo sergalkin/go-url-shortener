@@ -98,12 +98,12 @@ func (m *fileStore) saveToFile(key, url string) error {
 	return e.Encode(urlRecord{key, url})
 }
 
-func (m *fileStore) Get(key string) (string, bool) {
+func (m *fileStore) Get(key string) (string, bool, bool) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
 
 	originalURL, ok := m.urls[key]
-	return originalURL, ok
+	return originalURL, ok, false
 }
 
 func (m *fileStore) LinksByUUID(uuid string) ([]UserURLs, bool) {

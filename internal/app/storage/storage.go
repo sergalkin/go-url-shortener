@@ -8,7 +8,7 @@ import (
 
 type Storage interface {
 	Store(key *string, url string)
-	Get(key string) (string, bool)
+	Get(key string) (string, bool, bool)
 	LinksByUUID(uuid string) ([]UserURLs, bool)
 }
 

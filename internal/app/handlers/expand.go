@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -26,6 +27,12 @@ func (h *URLExpandHandler) ExpandURL(w http.ResponseWriter, req *http.Request) {
 	key := chi.URLParam(req, "id")
 
 	originalLink, err := h.service.ExpandURL(key)
+
+	if errors.Is(err, utils.ErrLinkIsDeleted) {
+		http.Error(w, err.Error(), http.StatusGone)
+		return
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

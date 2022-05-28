@@ -71,6 +71,7 @@ func main() {
 	defer db.Close(ctx)
 	dbHandler := handlers.NewDBHandler(db, logger)
 	batchHandler := handlers.NewBatchHandler(db, logger)
+	deleteHandler := handlers.NewURLDeleteHandler(service.NewURLDeleteService(db, logger))
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", shortenHandler.ShortenURL)
@@ -82,6 +83,7 @@ func main() {
 		r.Post("/shorten", shortenHandler.APIShortenURL)
 		r.Post("/shorten/batch", batchHandler.BatchInsert)
 		r.Get("/user/urls", expandHandler.UserURLs)
+		r.Delete("/user/urls", deleteHandler.Delete)
 	})
 
 	server := &http.Server{

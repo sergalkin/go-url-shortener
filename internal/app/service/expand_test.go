@@ -19,12 +19,12 @@ func (sm *expandStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool)
 }
 
 func (sm *expandStorageMock) Store(key *string, url string) {}
-func (sm *expandStorageMock) Get(key string) (string, bool) {
+func (sm *expandStorageMock) Get(key string) (string, bool, bool) {
 	expandedURL := "https://github.com/"
 	if !sm.IsKeyFoundInStore {
 		expandedURL = ""
 	}
-	return expandedURL, sm.IsKeyFoundInStore
+	return expandedURL, sm.IsKeyFoundInStore, false
 }
 
 func TestNewURLExpandService(t *testing.T) {

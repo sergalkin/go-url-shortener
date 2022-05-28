@@ -20,12 +20,12 @@ func (sm *shortenStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool
 }
 
 func (sm *shortenStorageMock) Store(key *string, url string) {}
-func (sm *shortenStorageMock) Get(key string) (string, bool) {
+func (sm *shortenStorageMock) Get(key string) (string, bool, bool) {
 	expandedURL := "https://github.com/"
 	if !sm.IsKeyFoundInStore {
 		expandedURL = ""
 	}
-	return expandedURL, sm.IsKeyFoundInStore
+	return expandedURL, sm.IsKeyFoundInStore, false
 }
 
 type sequenceMock struct {
