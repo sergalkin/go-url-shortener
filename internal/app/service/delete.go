@@ -54,7 +54,6 @@ func getDataFromBody(s *URLDeleteService, r *http.Request) (string, []string, er
 
 	b, errB := ioutil.ReadAll(r.Body)
 	if errB != nil {
-		s.logger.Error(err.Error(), zap.Error(err))
 		return "", nil, err
 	}
 

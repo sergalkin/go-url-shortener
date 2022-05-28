@@ -140,7 +140,6 @@ func (d *db) Get(key string) (string, bool, bool) {
 
 	q := fmt.Sprintf("select url,is_deleted from links where url_hash = '%s'", key)
 	if err := d.conn.QueryRow(ctx, q).Scan(&url, &isDeleted); err != nil {
-		d.logger.Error(err.Error(), zap.Error(err))
 		return "", false, false
 	}
 
