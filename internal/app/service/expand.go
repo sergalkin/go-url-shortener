@@ -30,9 +30,14 @@ func NewURLExpandService(storage storage.Storage, l *zap.Logger) *URLExpandServi
 }
 
 func (u *URLExpandService) ExpandURL(key string) (string, error) {
-	url, ok := u.storage.Get(key)
-	if !ok || url == "" {
+	url, ok, isDeleted := u.storage.Get(key)
+
+	if !ok || (url == "" && !isDeleted) {
 		return url, errors.New("error in expanding shortened link")
+	}
+
+	if isDeleted {
+		return url, utils.ErrLinkIsDeleted
 	}
 
 	return url, nil

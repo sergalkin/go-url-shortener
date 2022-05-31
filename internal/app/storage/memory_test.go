@@ -57,7 +57,7 @@ func TestMemory_Get(t *testing.T) {
 			m := &Memory{
 				urls: tt.fields.urls,
 			}
-			got, ok := m.Get(tt.args.key)
+			got, ok, _ := m.Get(tt.args.key)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.ok, ok)
 		})

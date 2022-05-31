@@ -47,12 +47,12 @@ func (m *Memory) Store(key *string, url string) {
 	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})
 }
 
-func (m *Memory) Get(key string) (string, bool) {
+func (m *Memory) Get(key string) (string, bool, bool) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
 
 	originalURL, ok := m.urls[key]
-	return originalURL, ok
+	return originalURL, ok, false
 }
 
 func (m *Memory) LinksByUUID(uuid string) ([]UserURLs, bool) {

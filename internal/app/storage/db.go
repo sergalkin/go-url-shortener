@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,6 +32,7 @@ type linkRow struct {
 	UID           uuid.UUID
 	CreatedAt     time.Time
 	CorrelationID string
+	IsDeleted     bool
 }
 
 type BatchRequest struct {
@@ -42,13 +45,20 @@ type BatchLink struct {
 	ShortURL      string `json:"short_url"`
 }
 
+type BatchDelete struct {
+	UID string
+	Arr []string
+}
+
 type DB interface {
 	Ping(ctx context.Context) error
 	Close(ctx context.Context) error
 	Store(key *string, url string)
-	Get(key string) (string, bool)
+	Get(key string) (string, bool, bool)
 	LinksByUUID(uuid string) ([]UserURLs, bool)
 	BatchInsert([]BatchRequest) ([]BatchLink, error)
+	SoftDeleteUserURLs(uuid string, ids []string) error
+	DeleteThroughCh(channels ...chan BatchDelete)
 }
 
 func NewDBConnection(l *zap.Logger) (*db, error) {
@@ -121,19 +131,19 @@ func (d *db) Store(key *string, url string) {
 	}
 }
 
-func (d *db) Get(key string) (string, bool) {
+func (d *db) Get(key string) (string, bool, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var url string
+	var isDeleted bool
 
-	q := fmt.Sprintf("select url from links where url_hash = '%s'", key)
-	if err := d.conn.QueryRow(ctx, q).Scan(&url); err != nil {
-		d.logger.Error(err.Error(), zap.Error(err))
-		return "", false
+	q := fmt.Sprintf("select url,is_deleted from links where url_hash = '%s'", key)
+	if err := d.conn.QueryRow(ctx, q).Scan(&url, &isDeleted); err != nil {
+		return "", false, false
 	}
 
-	return url, true
+	return url, true, isDeleted
 }
 
 func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
@@ -218,4 +228,69 @@ func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
 	}
 
 	return batchLinks, nil
+}
+
+func (d *db) DeleteThroughCh(channels ...chan BatchDelete) {
+	out := fanIn(channels...)
+
+	for c := range out {
+		go func() {
+			err := d.SoftDeleteUserURLs(c.UID, c.Arr)
+			if err != nil {
+				d.logger.Error(err.Error(), zap.Error(err))
+			}
+		}()
+		close(out)
+	}
+}
+
+func fanIn(channels ...chan BatchDelete) chan BatchDelete {
+	outCh := make(chan BatchDelete)
+
+	go func() {
+		wg := &sync.WaitGroup{}
+
+		for _, ch := range channels {
+			wg.Add(1)
+
+			go func(ch chan BatchDelete) {
+				defer wg.Done()
+				for i := range ch {
+					outCh <- i
+				}
+			}(ch)
+		}
+
+		wg.Wait()
+		close(outCh)
+	}()
+
+	return outCh
+}
+
+func (d *db) SoftDeleteUserURLs(uuid string, ids []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	tx, err := d.conn.Begin(ctx)
+	if err != nil {
+		d.logger.Error(err.Error(), zap.Error(err))
+	}
+	defer tx.Rollback(ctx)
+
+	stmt := fmt.Sprintf("update links set is_deleted = true where uid = '%s' and url_hash in ('%s')",
+		uuid,
+		strings.Join(ids, "','"))
+
+	_, err = tx.Exec(ctx, stmt)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
