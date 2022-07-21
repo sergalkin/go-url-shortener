@@ -1,11 +1,11 @@
 package service
 
 import (
-	"go.uber.org/zap"
 	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 )

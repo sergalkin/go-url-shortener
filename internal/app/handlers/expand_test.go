@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 )
 
 type URLExpandHandlerMock struct {

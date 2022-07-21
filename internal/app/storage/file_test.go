@@ -2,11 +2,12 @@ package storage
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 func TestNewFile(t *testing.T) {

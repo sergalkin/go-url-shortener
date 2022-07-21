@@ -1,11 +1,12 @@
 package storage
 
 import (
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 )
