@@ -47,9 +47,11 @@ func TestNewStorage(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 

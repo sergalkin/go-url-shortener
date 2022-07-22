@@ -33,9 +33,11 @@ func TestNewFile(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -132,9 +134,11 @@ func Test_fileStore_Store(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -171,9 +175,11 @@ func Test_fileStore_loadFromFile(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -212,9 +218,11 @@ func Test_fileStore_saveToFile(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
