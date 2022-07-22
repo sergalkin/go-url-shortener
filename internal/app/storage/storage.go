@@ -15,7 +15,7 @@ type Storage interface {
 func NewStorage(l *zap.Logger) (Storage, error) {
 	switch {
 	case config.DatabaseDSN() != "":
-		return NewDBConnection(l)
+		return NewDBConnection(l, true)
 	case config.FileStoragePath() != "":
 		return NewFile(config.FileStoragePath(), l), nil
 	default:

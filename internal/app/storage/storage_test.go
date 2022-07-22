@@ -52,3 +52,28 @@ func TestNewStorage(t *testing.T) {
 		log.Fatalln(err)
 	}
 }
+
+func TestNewStorageCanCreateDbStorage(t *testing.T) {
+	tests := []struct {
+		name string
+		do   func()
+	}{
+		{
+			name: "DB will be created if DSN is provided",
+			do: func() {
+				config.NewConfig(
+					config.WithDatabaseConnection("postgres://root:root@localhost:5432/postgres?sslmode=disable"),
+				)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.do()
+			s, _ := NewStorage(&zap.Logger{})
+			assert.NotNil(t, s)
+			assert.IsType(t, &db{}, s)
+			assert.NotEmpty(t, s)
+		})
+	}
+}

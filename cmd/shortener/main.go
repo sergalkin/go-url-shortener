@@ -61,7 +61,7 @@ func main() {
 	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence, logger))
 	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s, logger))
 
-	db, err := storage.NewDBConnection(logger)
+	db, err := storage.NewDBConnection(logger, true)
 	if err != nil {
 		fmt.Println(err)
 	}

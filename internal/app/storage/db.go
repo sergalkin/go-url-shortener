@@ -61,7 +61,7 @@ type DB interface {
 	DeleteThroughCh(channels ...chan BatchDelete)
 }
 
-func NewDBConnection(l *zap.Logger) (*db, error) {
+func NewDBConnection(l *zap.Logger, isNeedToRunMigrations bool) (*db, error) {
 	var database = &db{conn: nil, logger: l}
 
 	if len(config.DatabaseDSN()) > 0 {
@@ -73,7 +73,7 @@ func NewDBConnection(l *zap.Logger) (*db, error) {
 		database.conn = conn
 	}
 
-	if database.conn != nil {
+	if database.conn != nil && isNeedToRunMigrations {
 		_, err := migrations.Up()
 		if err != nil {
 			return database, err
