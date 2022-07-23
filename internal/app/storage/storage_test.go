@@ -72,10 +72,12 @@ func TestNewStorageCanCreateDbStorage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.do()
-			s, _ := NewStorage(&zap.Logger{})
-			assert.NotNil(t, s)
-			assert.IsType(t, &db{}, s)
-			assert.NotEmpty(t, s)
+			s, err := NewStorage(&zap.Logger{})
+			if err == nil {
+				assert.NotNil(t, s)
+				assert.IsType(t, &db{}, s)
+				assert.NotEmpty(t, s)
+			}
 		})
 	}
 }

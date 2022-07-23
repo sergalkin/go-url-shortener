@@ -30,9 +30,9 @@ func Test_db_Ping(t *testing.T) {
 				errPing := conn.Ping(context.Background())
 
 				assert.NoError(t, errPing)
-
-				cfg.DatabaseDSN = ""
 			}
+
+			cfg.DatabaseDSN = ""
 		})
 	}
 }
@@ -56,9 +56,9 @@ func Test_db_Close(t *testing.T) {
 				errPing := conn.Close(context.Background())
 
 				assert.NoError(t, errPing)
-
-				cfg.DatabaseDSN = ""
 			}
+
+			cfg.DatabaseDSN = ""
 		})
 	}
 }

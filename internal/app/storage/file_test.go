@@ -253,3 +253,30 @@ func writeTestingDataToFile(filepath string) {
 		log.Fatalln(err)
 	}
 }
+
+func Test_fileStore_LinksByUUID(t *testing.T) {
+	type args struct {
+		uuid string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "Links can be restored from UUID",
+			args: args{uuid: "1"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			linksMap := map[string][]UserURLs{}
+
+			linksMap["1"] = append(linksMap["1"], UserURLs{ShortURL: "test", OriginalURL: "ya.ru"})
+			m := &fileStore{userURLs: linksMap}
+
+			got, ok := m.LinksByUUID(tt.args.uuid)
+			assert.True(t, ok)
+			assert.NotEmpty(t, got)
+		})
+	}
+}

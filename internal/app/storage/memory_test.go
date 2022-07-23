@@ -140,3 +140,34 @@ func TestNewMemory(t *testing.T) {
 		})
 	}
 }
+
+func TestMemory_LinksByUUID(t *testing.T) {
+	type fields struct {
+		urls     map[string]string
+		userURLs map[string][]UserURLs
+		logger   *zap.Logger
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []UserURLs
+	}{
+		{
+			name: "Can retrieve links UUID",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Memory{
+				urls:     tt.fields.urls,
+				userURLs: map[string][]UserURLs{},
+			}
+
+			m.userURLs["1"] = append(m.userURLs["1"], UserURLs{ShortURL: "", OriginalURL: ""})
+			links, ok := m.LinksByUUID("1")
+
+			assert.True(t, ok)
+			assert.NotEmpty(t, links)
+		})
+	}
+}
