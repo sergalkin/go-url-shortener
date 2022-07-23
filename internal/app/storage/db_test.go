@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
 func Test_db_Ping(t *testing.T) {
@@ -61,4 +62,27 @@ func Test_db_Close(t *testing.T) {
 			cfg.DatabaseDSN = ""
 		})
 	}
+}
+
+func BenchmarkDb_Store(b *testing.B) {
+	cfg := config.NewConfig(
+		config.WithDatabaseConnection("postgres://root:root@localhost:5432/postgres?sslmode=disable"),
+	)
+
+	conn, err := NewDBConnection(zap.NewNop(), true)
+
+	if err == nil {
+		seq := utils.NewSequence()
+
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			//do not stop here timer cause store need generated seq of letters, and it too takes time
+			key, _ := seq.Generate(4)
+
+			conn.Store(&key, "test.com")
+		}
+		b.StopTimer()
+	}
+
+	cfg.DatabaseDSN = ""
 }

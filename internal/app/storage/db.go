@@ -61,6 +61,11 @@ type DB interface {
 	DeleteThroughCh(channels ...chan BatchDelete)
 }
 
+const (
+	getURLHash  = `select url_hash from links where url = $1`
+	insertLinks = `insert into links (url_hash, url, uid) values ($1,$2,$3) ON CONFLICT ON CONSTRAINT links_url_key DO NOTHING`
+)
+
 func NewDBConnection(l *zap.Logger, isNeedToRunMigrations bool) (*db, error) {
 	var database = &db{conn: nil, logger: l}
 
@@ -107,19 +112,13 @@ func (d *db) Store(key *string, url string) {
 		d.logger.Error(err.Error(), zap.Error(err))
 	}
 
-	q := fmt.Sprintf(
-		"insert into links (url_hash, url, uid) values ('%s', '%s', '%s') "+
-			"ON CONFLICT ON CONSTRAINT links_url_key DO NOTHING", *key, url, uid,
-	)
-
-	r, err := d.conn.Exec(ctx, q)
+	r, err := d.conn.Exec(ctx, insertLinks, *key, url, uid)
 	if err != nil {
 		d.logger.Error(err.Error(), zap.Error(err))
 	}
 
 	if r.RowsAffected() == 0 {
-		q = "select url_hash from links where url = $1"
-		row := d.conn.QueryRow(ctx, q, url)
+		row := d.conn.QueryRow(ctx, getURLHash, url)
 
 		var tempKey *string
 		err = row.Scan(&tempKey)

@@ -12,7 +12,13 @@ type SequenceGenerator interface {
 // if Sequence struct will no longer complains with Storage interface, code will be broken on building stage
 var _ SequenceGenerator = (*Sequence)(nil)
 
+var letters []rune
+
 type Sequence struct{}
+
+func init() {
+	letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+}
 
 func NewSequence() *Sequence {
 	return &Sequence{}
@@ -23,8 +29,6 @@ func (s *Sequence) Generate(lettersNumber int) (string, error) {
 	if lettersNumber < 0 {
 		return "", errors.New("to generate random sequence positive number of letters must be provided")
 	}
-
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 	b := make([]rune, lettersNumber)
 	for i := range b {
