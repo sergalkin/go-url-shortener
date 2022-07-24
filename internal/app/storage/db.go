@@ -16,6 +16,7 @@ import (
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/migrations"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
+	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
 var _ DB = (*db)(nil)
@@ -51,12 +52,22 @@ type BatchDelete struct {
 }
 
 type DB interface {
+	// Ping - checks for connection. If no error returned Ping is considered successful.
 	Ping(ctx context.Context) error
+	// Close - closes connection.
 	Close(ctx context.Context) error
+	// Store - stores given url into database
 	Store(key *string, url string)
+	// Get - trying to retrieve a URL from database by provided key.
+	// Get - returns URL, bool as status of retrieval, bool as status was URL deleted or is it still present.
 	Get(key string) (string, bool, bool)
+	// LinksByUUID - trying to retrieve slice of UserURLs. On successful retrieval returns true as bool value
+	// and false of failure.
 	LinksByUUID(uuid string) ([]UserURLs, bool)
+	// BatchInsert - mass insert provided links into database
 	BatchInsert([]BatchRequest) ([]BatchLink, error)
+	// SoftDeleteUserURLs - marks provided links as deleted. uuid - is user unique id, ids - is slice of links that
+	// needs to be marked as soft deleted.
 	SoftDeleteUserURLs(uuid string, ids []string) error
 	DeleteThroughCh(channels ...chan BatchDelete)
 }
@@ -195,7 +206,7 @@ func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
 	}
 	defer tx.Rollback(ctx)
 
-	seqGenerator := utils.NewSequence()
+	seqGenerator := sequence.NewSequence()
 	batchLinks := make([]BatchLink, 0)
 
 	var uid string

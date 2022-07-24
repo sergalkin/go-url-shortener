@@ -1,16 +1,17 @@
-package utils
+package sequence
 
 import (
 	"errors"
 	"math/rand"
 )
 
-type SequenceGenerator interface {
+type Generator interface {
+	// Generate - creates a random string of lettersNumber length.
 	Generate(lettersNumber int) (string, error)
 }
 
 // if Sequence struct will no longer complains with Storage interface, code will be broken on building stage
-var _ SequenceGenerator = (*Sequence)(nil)
+var _ Generator = (*Sequence)(nil)
 
 var letters []rune
 

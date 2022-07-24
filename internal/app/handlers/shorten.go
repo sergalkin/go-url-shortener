@@ -16,12 +16,14 @@ type URLShortenerHandler struct {
 	service service.URLShorten
 }
 
+// NewURLShortenerHandler - pepe
 func NewURLShortenerHandler(service service.URLShorten) *URLShortenerHandler {
 	return &URLShortenerHandler{
 		service: service,
 	}
 }
 
+// ShortenURL - shorten provided URL.
 func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Request) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()

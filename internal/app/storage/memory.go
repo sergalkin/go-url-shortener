@@ -19,6 +19,7 @@ type Memory struct {
 	logger   *zap.Logger
 }
 
+// UserURLs - container for ShortURL and OriginalURL
 type UserURLs struct {
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`

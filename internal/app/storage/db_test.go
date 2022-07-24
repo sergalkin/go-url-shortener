@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
+	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
 func Test_db_Ping(t *testing.T) {
@@ -72,7 +72,7 @@ func BenchmarkDb_Store(b *testing.B) {
 	conn, err := NewDBConnection(zap.NewNop(), true)
 
 	if err == nil {
-		seq := utils.NewSequence()
+		seq := sequence.NewSequence()
 
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
