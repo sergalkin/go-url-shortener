@@ -21,6 +21,12 @@ import (
 	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
+var (
+	buildVersion string
+	buildDate    string
+	buildCommit  string
+)
+
 func init() {
 	address := flag.String("a", config.ServerAddress(), "SERVER_ADDRESS")
 	baseURL := flag.String("b", config.BaseURL(), "BASE_URL")
@@ -34,9 +40,13 @@ func init() {
 		config.WithFileStoragePath(*fileStoragePath),
 		config.WithDatabaseConnection(*databaseDSN),
 	)
+
+	setDefaultValuesForBuildInfo()
 }
 
 func main() {
+	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
+
 	logger, err := zap.NewProduction()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -92,4 +102,16 @@ func main() {
 	}
 
 	log.Fatalln(server.ListenAndServe())
+}
+
+func setDefaultValuesForBuildInfo() {
+	if buildCommit == "" {
+		buildCommit = "N/A"
+	}
+	if buildVersion == "" {
+		buildVersion = "N/A"
+	}
+	if buildDate == "" {
+		buildDate = "N/A"
+	}
 }
