@@ -1,3 +1,4 @@
+// Package osexit - is custom analysis rule that searches for os.Exit calls in main function of package main.
 package osexit
 
 import (
@@ -17,12 +18,13 @@ type osExitVisitor struct {
 	Pass *analysis.Pass
 }
 
+// Visit - method is invoked for each node encountered by ast.Walk.
 func (v *osExitVisitor) Visit(node ast.Node) ast.Visitor {
 	if v.Pass.Pkg.Name() != "main" {
 		return nil
 	}
 
-	// added ignore of some .test file to prevent false positive warnings cause of cache
+	// added ignore of some .test file to prevent false positive warnings cause of cache.
 	if strings.Contains(v.Pass.Pkg.Path(), ".test") {
 		return nil
 	}
@@ -39,6 +41,8 @@ func (v *osExitVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
+// expr - is called then node represents an expression
+// expr - checks for expression to be os.Exit call with v.Pass.Reportf() call if so.
 func (v *osExitVisitor) expr(ce *ast.CallExpr) {
 	if fun, funOk := ce.Fun.(*ast.SelectorExpr); funOk {
 		pkg, ok := fun.X.(*ast.Ident)
@@ -49,6 +53,7 @@ func (v *osExitVisitor) expr(ce *ast.CallExpr) {
 	}
 }
 
+// run - main function of analyzer.
 func run(pass *analysis.Pass) (any, error) {
 	for _, file := range pass.Files {
 		ast.Walk(&osExitVisitor{Pass: pass}, file)

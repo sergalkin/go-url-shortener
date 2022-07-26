@@ -58,6 +58,7 @@ type LintOptions func(*analyzerList)
 
 var list analyzerList
 
+// NewWithOptions - creates list of analyzerList based on passed options.
 func NewWithOptions(opts ...LintOptions) *analyzerList {
 	for _, opt := range opts {
 		opt(&list)
@@ -66,6 +67,7 @@ func NewWithOptions(opts ...LintOptions) *analyzerList {
 	return &list
 }
 
+// WithBuiltin - adds standard rules to rules list if -builtin flag was passed.
 func WithBuiltin(isActive bool) LintOptions {
 	return func(l *analyzerList) {
 		if isActive {
@@ -118,6 +120,7 @@ func WithBuiltin(isActive bool) LintOptions {
 	}
 }
 
+// WithStatic - adds SA rules from https://staticcheck.io to rules list if -static flag was passed.
 func WithStatic(isActive bool) LintOptions {
 	return func(l *analyzerList) {
 		if isActive {
@@ -142,6 +145,7 @@ func WithStatic(isActive bool) LintOptions {
 	}
 }
 
+// WithExtra - adds go-critic and bodyclose to rules list if -extra flag was passed.
 func WithExtra(isActive bool) LintOptions {
 	return func(l *analyzerList) {
 		if isActive {
