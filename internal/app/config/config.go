@@ -8,10 +8,10 @@ import (
 )
 
 type config struct {
-	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:""`
-	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:""`
+	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`  // server address without protocol
+	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"` // base URL
+	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:""`             // path to file with stored URLs when using memory mode
+	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:""`                  // dsn used to establish connection with database
 }
 
 // OptionConfig - callback that can be provided to NewConfig to construct config with non default params.

@@ -38,6 +38,7 @@ func init() {
 	}
 }
 
+// Encode - encodes provided string to hexadecimal value encrypted by aesGCM.Seal.
 func Encode(userID string) (string, error) {
 	src := []byte(userID)
 
@@ -48,6 +49,7 @@ func Encode(userID string) (string, error) {
 	return sha, nil
 }
 
+// Decode - decodes provided hexadecimal value and decrypts by aesGCM.Open, after decrypting sets userID with value
 func Decode(sha string, userID *string) error {
 	dst, err := hex.DecodeString(sha)
 
@@ -67,6 +69,7 @@ func Decode(sha string, userID *string) error {
 	return nil
 }
 
+// generateRandom - generates random slice of bytes used by aes.Newcipher.
 func generateRandom(size int) ([]byte, error) {
 	b := make([]byte, size)
 	_, err := rand.Read(b)

@@ -16,7 +16,7 @@ type URLShortenerHandler struct {
 	service service.URLShorten
 }
 
-// NewURLShortenerHandler - pepe
+// NewURLShortenerHandler - creates a URLShortenerHandler
 func NewURLShortenerHandler(service service.URLShorten) *URLShortenerHandler {
 	return &URLShortenerHandler{
 		service: service,
@@ -63,6 +63,7 @@ func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Reques
 	fmt.Fprintf(w, "%s/%s", config.BaseURL(), key)
 }
 
+// APIShortenURL - shorten provided URL for api based route.
 func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Request) {
 	requestData := struct {
 		URL string

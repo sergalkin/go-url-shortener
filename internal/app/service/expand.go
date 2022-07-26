@@ -28,6 +28,7 @@ func NewURLExpandService(storage storage.Storage, l *zap.Logger) *URLExpandServi
 	}
 }
 
+// ExpandURL - attempts to retrieve original URL by its shortened value.
 func (u *URLExpandService) ExpandURL(key string) (string, error) {
 	url, ok, isDeleted := u.storage.Get(key)
 
@@ -42,6 +43,7 @@ func (u *URLExpandService) ExpandURL(key string) (string, error) {
 	return url, nil
 }
 
+// ExpandUserLinks - attempts to retrieve original URLs by provided uuid.
 func (u *URLExpandService) ExpandUserLinks(uuid string) ([]storage.UserURLs, error) {
 	links, ok := u.storage.LinksByUUID(uuid)
 	if !ok {

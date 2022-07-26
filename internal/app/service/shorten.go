@@ -28,6 +28,7 @@ func NewURLShortenerService(storage storage.Storage, seq sequence.Generator, l *
 	}
 }
 
+// ShortenURL - shortens provided URL and stores it in storage.
 func (u *URLShortenerService) ShortenURL(url string) (string, error) {
 	for {
 		key, err := u.seq.Generate(8)

@@ -18,12 +18,14 @@ type URLExpandHandler struct {
 	service service.URLExpand
 }
 
+// NewURLExpandHandler - creates URLExpandHandler
 func NewURLExpandHandler(service service.URLExpand) *URLExpandHandler {
 	return &URLExpandHandler{
 		service: service,
 	}
 }
 
+// ExpandURL - retrieve and expand URL from storage with redirect.
 func (h *URLExpandHandler) ExpandURL(w http.ResponseWriter, req *http.Request) {
 	key := chi.URLParam(req, "id")
 
@@ -44,6 +46,7 @@ func (h *URLExpandHandler) ExpandURL(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
+// UserURLs - get list of userURLs from storage.
 func (h *URLExpandHandler) UserURLs(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 

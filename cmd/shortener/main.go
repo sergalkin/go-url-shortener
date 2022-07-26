@@ -1,3 +1,18 @@
+/*
+Shortener - is a service that can transform URL to shortened URL and store it Memory/File/Database.
+
+How to use:
+	go run main.go [-flag]
+The flags are:
+	-a
+		Sets SERVER_ADDRESS.
+	-v
+		Sets BASE_URL.
+	-f
+		Sets FILE_STORAGE_PATH.
+	-d
+		Sets DATABASE_DSN.
+*/
 package main
 
 import (
@@ -104,6 +119,7 @@ func main() {
 	log.Panic(server.ListenAndServe())
 }
 
+// setDefaultValuesForBuildInfo - resigns buildValues to "N/A", if after flag parsing they still have zero values
 func setDefaultValuesForBuildInfo() {
 	if buildCommit == "" {
 		buildCommit = "N/A"

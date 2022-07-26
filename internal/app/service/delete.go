@@ -30,6 +30,7 @@ func NewURLDeleteService(storage storage.DB, l *zap.Logger) *URLDeleteService {
 	}
 }
 
+// Delete - soft delete URL.
 func (s *URLDeleteService) Delete(r *http.Request) error {
 	uid, data, err := getDataFromBody(s, r)
 	if err != nil {
@@ -44,6 +45,7 @@ func (s *URLDeleteService) Delete(r *http.Request) error {
 	return nil
 }
 
+// getDataFromBody - a helper function to read data from body and get uuid from uid cookie.
 func getDataFromBody(s *URLDeleteService, r *http.Request) (string, []string, error) {
 	var uid string
 	err := utils.Decode(middleware.GetUUID(), &uid)
@@ -67,6 +69,7 @@ func getDataFromBody(s *URLDeleteService, r *http.Request) (string, []string, er
 	return uid, arr, nil
 }
 
+// generateCh - generates and put into channel storage.BatchDelete
 func generateCh(uid string, data []string) chan storage.BatchDelete {
 	inputCh := make(chan storage.BatchDelete)
 

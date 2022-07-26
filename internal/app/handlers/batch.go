@@ -17,6 +17,7 @@ type BatchHandler struct {
 	logger  *zap.Logger
 }
 
+// NewBatchHandler - creates BatchHandler.
 func NewBatchHandler(storage storage.DB, l *zap.Logger) *BatchHandler {
 	return &BatchHandler{
 		storage: storage,
@@ -24,6 +25,7 @@ func NewBatchHandler(storage storage.DB, l *zap.Logger) *BatchHandler {
 	}
 }
 
+// BatchInsert - mass insert of provided URLs in storage.
 func (h *BatchHandler) BatchInsert(w http.ResponseWriter, req *http.Request) {
 	var uid string
 	err := utils.Decode(middleware.GetUUID(), &uid)

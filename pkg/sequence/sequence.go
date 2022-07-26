@@ -17,10 +17,12 @@ var letters []rune
 
 type Sequence struct{}
 
+// init - sets the letter variable with default runes containing english alphabet in lower and uppercase
 func init() {
 	letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 }
 
+// NewSequence - creates new Sequence
 func NewSequence() *Sequence {
 	return &Sequence{}
 }

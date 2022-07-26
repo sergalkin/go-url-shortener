@@ -16,6 +16,8 @@ func (w decompressWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }
 
+// Gzip - gzip middleware, that can compress and decompress gzip based
+// middleware runs only if Content-Encoding = gzip || Accept-Encoding = gzip is present in header.
 func Gzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 

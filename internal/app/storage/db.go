@@ -21,11 +21,13 @@ import (
 
 var _ DB = (*db)(nil)
 
+// db - representation of *pgx.Conn and *zap.Logger
 type db struct {
 	conn   *pgx.Conn
 	logger *zap.Logger
 }
 
+// linkRow - a representation of link in DB.
 type linkRow struct {
 	CreatedAt     time.Time
 	URLHash       string
@@ -36,11 +38,13 @@ type linkRow struct {
 	UID           uuid.UUID
 }
 
+// BatchRequest - a representation of mass assignment URL request.
 type BatchRequest struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
+// BatchLink - a representation of returned values of mass assignment URL request.
 type BatchLink struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
@@ -77,6 +81,7 @@ const (
 	insertLinks = `insert into links (url_hash, url, uid) values ($1,$2,$3) ON CONFLICT ON CONSTRAINT links_url_key DO NOTHING`
 )
 
+// NewDBConnection - creates new database connection and attempts to run migrations.
 func NewDBConnection(l *zap.Logger, isNeedToRunMigrations bool) (*db, error) {
 	var database = &db{conn: nil, logger: l}
 
@@ -99,6 +104,7 @@ func NewDBConnection(l *zap.Logger, isNeedToRunMigrations bool) (*db, error) {
 	return database, nil
 }
 
+// Ping - ping database to check for its availability.
 func (d *db) Ping(ctx context.Context) error {
 	if d.conn == nil {
 		return errors.New("error in connection to db")
@@ -106,6 +112,7 @@ func (d *db) Ping(ctx context.Context) error {
 	return d.conn.Ping(ctx)
 }
 
+// Close - closes connection with database.
 func (d *db) Close(ctx context.Context) error {
 	if d.conn == nil {
 		return errors.New("error in connection to db")
@@ -113,6 +120,8 @@ func (d *db) Close(ctx context.Context) error {
 	return d.conn.Close(ctx)
 }
 
+// Store - stores provided url by key in database
+// additionally trying to get uuid from cookie uid and add its value to uid column in database.
 func (d *db) Store(key *string, url string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -141,6 +150,8 @@ func (d *db) Store(key *string, url string) {
 	}
 }
 
+// Get - attempt to get url from database by its key
+// returns url, bool representation of was url found, bool representation of was url soft deleted.
 func (d *db) Get(key string) (string, bool, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -156,6 +167,7 @@ func (d *db) Get(key string) (string, bool, bool) {
 	return url, true, isDeleted
 }
 
+// LinksByUUID - get slice of UserURLs from database by provided uuid and bool representation of was url found or not.
 func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	var userUrls []UserURLs
 
@@ -196,6 +208,8 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	return userUrls, true
 }
 
+// BatchInsert - batch insert links to database with CorrelationID
+// additionally adds uuid to uid column in database gotten form uid cookie.
 func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -240,6 +254,7 @@ func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
 	return batchLinks, nil
 }
 
+// DeleteThroughCh - Soft deletes URL using channels ang go routine.
 func (d *db) DeleteThroughCh(channels ...chan BatchDelete) {
 	out := fanIn(channels...)
 
@@ -278,6 +293,7 @@ func fanIn(channels ...chan BatchDelete) chan BatchDelete {
 	return outCh
 }
 
+// SoftDeleteUserURLs - marks URL as deleted in database.
 func (d *db) SoftDeleteUserURLs(uuid string, ids []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()

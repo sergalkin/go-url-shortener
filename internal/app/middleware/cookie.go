@@ -25,6 +25,9 @@ func New() *cookieUUID {
 	return &cookieUUID{name: "uid"}
 }
 
+// Cookie - uuid cookie middleware that attempts to read uid cookie and set it cookieUUID
+// if no cookie was read, it creates a new one and stores it in cookieUUID.
+// finally it adds uid cookie to http.ResponseWriter
 func Cookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		sha, err := setCookie(writer, request)
@@ -47,6 +50,7 @@ func Cookie(next http.Handler) http.Handler {
 	})
 }
 
+// setCookie - attempts to read cookie from http.Request and generate a new one if could not.
 func setCookie(writer http.ResponseWriter, request *http.Request) (string, error) {
 	defer cookie.mu.Unlock()
 	cookie.mu.Lock()
@@ -66,6 +70,7 @@ func setCookie(writer http.ResponseWriter, request *http.Request) (string, error
 	return sha, nil
 }
 
+// GetUUID - gets uuid from cookieUUID.
 func GetUUID() string {
 	defer cookie.mu.Unlock()
 	cookie.mu.Lock()
