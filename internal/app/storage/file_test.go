@@ -2,11 +2,12 @@ package storage
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 func TestNewFile(t *testing.T) {
@@ -32,9 +33,11 @@ func TestNewFile(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -131,9 +134,11 @@ func Test_fileStore_Store(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -170,9 +175,11 @@ func Test_fileStore_loadFromFile(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -211,9 +218,11 @@ func Test_fileStore_saveToFile(t *testing.T) {
 		})
 	}
 
-	err := os.Remove("tmp")
-	if err != nil {
-		log.Fatalln(err)
+	if _, fErr := os.Stat("tmp"); fErr == nil {
+		err := os.Remove("tmp")
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -242,5 +251,32 @@ func writeTestingDataToFile(filepath string) {
 	err = file.Close()
 	if err != nil {
 		log.Fatalln(err)
+	}
+}
+
+func Test_fileStore_LinksByUUID(t *testing.T) {
+	type args struct {
+		uuid string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "Links can be restored from UUID",
+			args: args{uuid: "1"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			linksMap := map[string][]UserURLs{}
+
+			linksMap["1"] = append(linksMap["1"], UserURLs{ShortURL: "test", OriginalURL: "ya.ru"})
+			m := &fileStore{userURLs: linksMap}
+
+			got, ok := m.LinksByUUID(tt.args.uuid)
+			assert.True(t, ok)
+			assert.NotEmpty(t, got)
+		})
 	}
 }

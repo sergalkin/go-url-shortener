@@ -1,24 +1,26 @@
-package utils
+package sequence_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
 func TestNewSequence(t *testing.T) {
 	tests := []struct {
 		name string
-		want *Sequence
+		want *sequence.Sequence
 	}{
 		{
 			name: "Sequence object can be created",
-			want: &Sequence{},
+			want: &sequence.Sequence{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, NewSequence())
+			require.Equal(t, tt.want, sequence.NewSequence())
 		})
 	}
 }
@@ -55,7 +57,7 @@ func TestGenerate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Sequence{}
+			s := &sequence.Sequence{}
 			v, err := s.Generate(tt.args.lettersNumber)
 			if err != nil {
 				require.Errorf(t, err, "to generate random sequence positive number of letters must be provided")
@@ -63,4 +65,12 @@ func TestGenerate(t *testing.T) {
 			require.Len(t, v, tt.want)
 		})
 	}
+}
+
+func ExampleSequence_Generate() {
+	// Creating new Sequence
+	s := sequence.NewSequence()
+
+	// Generating random sequence of letters based on provided int
+	s.Generate(5)
 }

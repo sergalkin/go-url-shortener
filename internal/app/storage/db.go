@@ -16,6 +16,7 @@ import (
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/migrations"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
+	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
 var _ DB = (*db)(nil)
@@ -51,17 +52,32 @@ type BatchDelete struct {
 }
 
 type DB interface {
+	// Ping - checks for connection. If no error returned Ping is considered successful.
 	Ping(ctx context.Context) error
+	// Close - closes connection.
 	Close(ctx context.Context) error
+	// Store - stores given url into database
 	Store(key *string, url string)
+	// Get - trying to retrieve a URL from database by provided key.
+	// Get - returns URL, bool as status of retrieval, bool as status was URL deleted or is it still present.
 	Get(key string) (string, bool, bool)
+	// LinksByUUID - trying to retrieve slice of UserURLs. On successful retrieval returns true as bool value
+	// and false of failure.
 	LinksByUUID(uuid string) ([]UserURLs, bool)
+	// BatchInsert - mass insert provided links into database
 	BatchInsert([]BatchRequest) ([]BatchLink, error)
+	// SoftDeleteUserURLs - marks provided links as deleted. uuid - is user unique id, ids - is slice of links that
+	// needs to be marked as soft deleted.
 	SoftDeleteUserURLs(uuid string, ids []string) error
 	DeleteThroughCh(channels ...chan BatchDelete)
 }
 
-func NewDBConnection(l *zap.Logger) (*db, error) {
+const (
+	getURLHash  = `select url_hash from links where url = $1`
+	insertLinks = `insert into links (url_hash, url, uid) values ($1,$2,$3) ON CONFLICT ON CONSTRAINT links_url_key DO NOTHING`
+)
+
+func NewDBConnection(l *zap.Logger, isNeedToRunMigrations bool) (*db, error) {
 	var database = &db{conn: nil, logger: l}
 
 	if len(config.DatabaseDSN()) > 0 {
@@ -73,7 +89,7 @@ func NewDBConnection(l *zap.Logger) (*db, error) {
 		database.conn = conn
 	}
 
-	if database.conn != nil {
+	if database.conn != nil && isNeedToRunMigrations {
 		_, err := migrations.Up()
 		if err != nil {
 			return database, err
@@ -107,19 +123,13 @@ func (d *db) Store(key *string, url string) {
 		d.logger.Error(err.Error(), zap.Error(err))
 	}
 
-	q := fmt.Sprintf(
-		"insert into links (url_hash, url, uid) values ('%s', '%s', '%s') "+
-			"ON CONFLICT ON CONSTRAINT links_url_key DO NOTHING", *key, url, uid,
-	)
-
-	r, err := d.conn.Exec(ctx, q)
+	r, err := d.conn.Exec(ctx, insertLinks, *key, url, uid)
 	if err != nil {
 		d.logger.Error(err.Error(), zap.Error(err))
 	}
 
 	if r.RowsAffected() == 0 {
-		q = "select url_hash from links where url = $1"
-		row := d.conn.QueryRow(ctx, q, url)
+		row := d.conn.QueryRow(ctx, getURLHash, url)
 
 		var tempKey *string
 		err = row.Scan(&tempKey)
@@ -196,7 +206,7 @@ func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
 	}
 	defer tx.Rollback(ctx)
 
-	seqGenerator := utils.NewSequence()
+	seqGenerator := sequence.NewSequence()
 	batchLinks := make([]BatchLink, 0)
 
 	var uid string

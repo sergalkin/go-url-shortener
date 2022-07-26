@@ -18,7 +18,7 @@ import (
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
+	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
 func init() {
@@ -56,12 +56,12 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	sequence := utils.NewSequence()
+	seq := sequence.NewSequence()
 
-	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, sequence, logger))
+	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, seq, logger))
 	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s, logger))
 
-	db, err := storage.NewDBConnection(logger)
+	db, err := storage.NewDBConnection(logger, true)
 	if err != nil {
 		fmt.Println(err)
 	}

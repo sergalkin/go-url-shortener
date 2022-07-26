@@ -5,6 +5,7 @@ import (
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
+	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
 var _ URLShorten = (*URLShortenerService)(nil)
@@ -15,11 +16,11 @@ type URLShorten interface {
 
 type URLShortenerService struct {
 	storage storage.Storage
-	seq     utils.SequenceGenerator
+	seq     sequence.Generator
 	logger  *zap.Logger
 }
 
-func NewURLShortenerService(storage storage.Storage, seq utils.SequenceGenerator, l *zap.Logger) *URLShortenerService {
+func NewURLShortenerService(storage storage.Storage, seq sequence.Generator, l *zap.Logger) *URLShortenerService {
 	return &URLShortenerService{
 		storage: storage,
 		seq:     seq,
