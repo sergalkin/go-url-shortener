@@ -13,10 +13,10 @@ import (
 var _ Storage = (*Memory)(nil)
 
 type Memory struct {
-	mu       sync.Mutex
+	logger   *zap.Logger
 	urls     map[string]string
 	userURLs map[string][]UserURLs
-	logger   *zap.Logger
+	mu       sync.Mutex
 }
 
 // UserURLs - container for ShortURL and OriginalURL
@@ -25,6 +25,7 @@ type UserURLs struct {
 	OriginalURL string `json:"original_url"`
 }
 
+// NewMemory - creates Memory struct
 func NewMemory(l *zap.Logger) *Memory {
 	return &Memory{
 		urls:     map[string]string{},
@@ -33,6 +34,7 @@ func NewMemory(l *zap.Logger) *Memory {
 	}
 }
 
+// Store - storing provided URL in Memory using key.
 func (m *Memory) Store(key *string, url string) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
@@ -48,6 +50,7 @@ func (m *Memory) Store(key *string, url string) {
 	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})
 }
 
+// Get - trying to get from Memory URL by its key.
 func (m *Memory) Get(key string) (string, bool, bool) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
@@ -56,6 +59,9 @@ func (m *Memory) Get(key string) (string, bool, bool) {
 	return originalURL, ok, false
 }
 
+// LinksByUUID - trying to get an array of UserURLs.
+//  on success will return []UserURLs and true
+//  on failure will return nil and false.
 func (m *Memory) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	defer m.mu.Unlock()
 	m.mu.Lock()

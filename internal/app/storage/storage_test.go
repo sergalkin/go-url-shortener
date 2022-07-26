@@ -13,9 +13,9 @@ import (
 
 func TestNewStorage(t *testing.T) {
 	tests := []struct {
-		name string
-		want Storage
 		do   func()
+		want Storage
+		name string
 	}{
 		{
 			name: "Memory storage will be created if no filepath is provided",
@@ -57,8 +57,8 @@ func TestNewStorage(t *testing.T) {
 
 func TestNewStorageCanCreateDbStorage(t *testing.T) {
 	tests := []struct {
-		name string
 		do   func()
+		name string
 	}{
 		{
 			name: "DB will be created if DSN is provided",

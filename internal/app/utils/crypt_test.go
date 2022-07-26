@@ -33,9 +33,9 @@ func TestDecode(t *testing.T) {
 		userID string
 	}
 	tests := []struct {
-		name    string
 		args    args
 		wantErr assert.ErrorAssertionFunc
+		name    string
 	}{
 		{
 			name: "Decode can retrieve userID from sha string",

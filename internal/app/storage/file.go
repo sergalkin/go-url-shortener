@@ -16,11 +16,11 @@ import (
 var _ Storage = (*fileStore)(nil)
 
 type fileStore struct {
-	mu       sync.Mutex
+	logger   *zap.Logger
 	urls     map[string]string
 	userURLs map[string][]UserURLs
 	filePath string
-	logger   *zap.Logger
+	mu       sync.Mutex
 }
 
 type urlRecord struct {
@@ -28,6 +28,7 @@ type urlRecord struct {
 	URL string `json:"URL"`
 }
 
+// NewFile - creates new fileStore struct.
 func NewFile(fileStoragePath string, l *zap.Logger) *fileStore {
 	fs := fileStore{
 		urls:     map[string]string{},
@@ -43,6 +44,7 @@ func NewFile(fileStoragePath string, l *zap.Logger) *fileStore {
 	return &fs
 }
 
+// loadFromFile - attempt to load previously stored URL from file.
 func (m *fileStore) loadFromFile() error {
 	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 
@@ -67,6 +69,9 @@ func (m *fileStore) loadFromFile() error {
 	return nil
 }
 
+// Store - store provided url in urls of fileStore struct using provided key
+// additionally gets UUID from cookie uid and stores that URL in userURL of fileStore struct
+// finally saves generated URL to file.
 func (m *fileStore) Store(key *string, url string) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
@@ -86,6 +91,7 @@ func (m *fileStore) Store(key *string, url string) {
 	}
 }
 
+// saveToFile - dumping to file urlRecord using json.Encode.
 func (m *fileStore) saveToFile(key, url string) error {
 	f, err := os.OpenFile(m.filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 
@@ -98,6 +104,7 @@ func (m *fileStore) saveToFile(key, url string) error {
 	return e.Encode(urlRecord{key, url})
 }
 
+// Get - getting URL from urls of fileStore struct.
 func (m *fileStore) Get(key string) (string, bool, bool) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
@@ -106,6 +113,7 @@ func (m *fileStore) Get(key string) (string, bool, bool) {
 	return originalURL, ok, false
 }
 
+// LinksByUUID - getting URL by UUID from userURLs of fileStore struct.
 func (m *fileStore) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	defer m.mu.Unlock()
 	m.mu.Lock()

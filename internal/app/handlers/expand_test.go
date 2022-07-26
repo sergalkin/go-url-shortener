@@ -19,7 +19,7 @@ type URLExpandHandlerMock struct {
 	hasErrorInExpandingURL bool
 }
 
-func (u *URLExpandHandlerMock) ExpandUserLinks() ([]storage.UserURLs, error) {
+func (u *URLExpandHandlerMock) ExpandUserLinks(uuid string) ([]storage.UserURLs, error) {
 	return nil, nil
 }
 
@@ -35,9 +35,9 @@ func TestNewURLExpandHandler(t *testing.T) {
 		service service.URLExpand
 	}
 	tests := []struct {
-		name string
 		args args
 		want *URLExpandHandler
+		name string
 	}{
 		{
 			name: "URLExpandHandler can be created",
@@ -58,16 +58,16 @@ func TestNewURLExpandHandler(t *testing.T) {
 
 func TestURLExpandHandler_ExpandURL(t *testing.T) {
 	type want struct {
-		code        int
-		response    string
 		contentType string
+		response    string
+		code        int
 	}
 
 	tests := []struct {
 		name       string
 		body       string
-		want       want
 		urlHandler *URLExpandHandlerMock
+		want       want
 	}{
 		{
 			name: "On making GET request with proper short URL user will be redirect to long URL",

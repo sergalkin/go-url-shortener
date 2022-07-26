@@ -15,7 +15,17 @@ type expandStorageMock struct {
 }
 
 func (sm *expandStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
-	return nil, true
+	if sm.IsKeyFoundInStore {
+		var sl []storage.UserURLs
+
+		sl = append(sl, storage.UserURLs{
+			ShortURL:    "test",
+			OriginalURL: "https://github.com/",
+		})
+
+		return sl, true
+	}
+	return nil, false
 }
 
 func (sm *expandStorageMock) Store(key *string, url string) {}
@@ -32,9 +42,9 @@ func TestNewURLExpandService(t *testing.T) {
 		storage storage.Storage
 	}
 	tests := []struct {
-		name string
 		args args
 		want *URLExpandService
+		name string
 	}{
 		{
 			name: "URLURLExpandService can be created",
@@ -95,6 +105,51 @@ func TestURLExpandService_ExpandURL(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestURLExpandService_ExpandUserLinks(t *testing.T) {
+	type fields struct {
+		storage storage.Storage
+	}
+	type args struct {
+		key string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "Service can retrieve expanded URL by it's uuid",
+			fields:  fields{storage: &expandStorageMock{IsKeyFoundInStore: true}},
+			args:    args{key: "1"},
+			want:    "https://github.com/",
+			wantErr: false,
+		},
+		{
+			name:    "Service will throw error on retrieve expanded URL by it's uuid if key does not exists in storage",
+			fields:  fields{storage: &expandStorageMock{IsKeyFoundInStore: false}},
+			args:    args{key: "1"},
+			want:    "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &URLExpandService{
+				storage: tt.fields.storage,
+			}
+			got, err := u.ExpandUserLinks(tt.args.key)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NotEmpty(t, got)
 				assert.NoError(t, err)
 			}
 		})

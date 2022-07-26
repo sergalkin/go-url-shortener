@@ -1,3 +1,18 @@
+/*
+Shortener - is a service that can transform URL to shortened URL and store it Memory/File/Database.
+
+How to use:
+	go run main.go [-flag]
+The flags are:
+	-a
+		Sets SERVER_ADDRESS.
+	-v
+		Sets BASE_URL.
+	-f
+		Sets FILE_STORAGE_PATH.
+	-d
+		Sets DATABASE_DSN.
+*/
 package main
 
 import (
@@ -21,6 +36,12 @@ import (
 	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
+var (
+	buildVersion string
+	buildDate    string
+	buildCommit  string
+)
+
 func init() {
 	address := flag.String("a", config.ServerAddress(), "SERVER_ADDRESS")
 	baseURL := flag.String("b", config.BaseURL(), "BASE_URL")
@@ -34,9 +55,13 @@ func init() {
 		config.WithFileStoragePath(*fileStoragePath),
 		config.WithDatabaseConnection(*databaseDSN),
 	)
+
+	setDefaultValuesForBuildInfo()
 }
 
 func main() {
+	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
+
 	logger, err := zap.NewProduction()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -91,5 +116,18 @@ func main() {
 		Handler: r,
 	}
 
-	log.Fatalln(server.ListenAndServe())
+	log.Panic(server.ListenAndServe())
+}
+
+// setDefaultValuesForBuildInfo - resigns buildValues to "N/A", if after flag parsing they still have zero values
+func setDefaultValuesForBuildInfo() {
+	if buildCommit == "" {
+		buildCommit = "N/A"
+	}
+	if buildVersion == "" {
+		buildVersion = "N/A"
+	}
+	if buildDate == "" {
+		buildDate = "N/A"
+	}
 }

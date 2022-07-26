@@ -15,6 +15,7 @@ type DBHandler struct {
 	logger  *zap.Logger
 }
 
+// NewDBHandler - creates DBHandler.
 func NewDBHandler(storage storage.DB, l *zap.Logger) *DBHandler {
 	return &DBHandler{
 		storage: storage,
@@ -22,6 +23,7 @@ func NewDBHandler(storage storage.DB, l *zap.Logger) *DBHandler {
 	}
 }
 
+// Ping - returns result of checking database availability to user.
 func (h *DBHandler) Ping(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), 1*time.Second)
 	defer cancel()

@@ -12,9 +12,9 @@ import (
 
 func TestNewFile(t *testing.T) {
 	tests := []struct {
+		want *fileStore
 		name string
 		path string
-		want *fileStore
 	}{
 		{
 			name: "File store can be created",
@@ -236,9 +236,9 @@ func writeTestingDataToFile(filepath string) {
 	m["test"] = "http://test.ru"
 	m["test2"] = "http://test2.ru"
 	for k, v := range m {
-		marshal, err := json.Marshal(urlRecord{Key: k, URL: v})
-		if err != nil {
-			log.Fatalln(err)
+		marshal, errMarsh := json.Marshal(urlRecord{Key: k, URL: v})
+		if errMarsh != nil {
+			log.Fatalln(errMarsh)
 		}
 
 		_, err = file.Write(marshal)

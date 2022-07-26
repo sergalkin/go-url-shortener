@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	ErrLinksConflict = errors.New("url has been already stored")
-	ErrLinkIsDeleted = errors.New("url has been deleted")
+	ErrLinksConflict = errors.New("url has been already stored") // an error that represents duplicate of URL in storage.
+	ErrLinkIsDeleted = errors.New("url has been deleted")        // an error that represents access to soft deleted URL.
 )
 
 func JSONError(w http.ResponseWriter, err interface{}, code int) {
