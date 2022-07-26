@@ -17,3 +17,6 @@ db-run:
 
 run-ld:
 	go run -ldflags "-X main.buildVersion=v1.0.0 -X 'main.buildDate=$(date +'%Y/%m/%d %H:%M:%S')' -X 'main.buildCommit='" cmd/shortener/main.go
+
+run-checks:
+	go run cmd/staticlint/main.go -builtin -static -extra ./...

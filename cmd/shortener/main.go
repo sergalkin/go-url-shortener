@@ -101,7 +101,7 @@ func main() {
 		Handler: r,
 	}
 
-	log.Fatalln(server.ListenAndServe())
+	log.Panic(server.ListenAndServe())
 }
 
 func setDefaultValuesForBuildInfo() {

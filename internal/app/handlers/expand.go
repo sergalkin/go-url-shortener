@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
@@ -46,7 +47,14 @@ func (h *URLExpandHandler) ExpandURL(w http.ResponseWriter, req *http.Request) {
 func (h *URLExpandHandler) UserURLs(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	links, errExpand := h.service.ExpandUserLinks()
+	var uuid string
+	err := utils.Decode(middleware.GetUUID(), &uuid)
+	if err != nil {
+		utils.JSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	links, errExpand := h.service.ExpandUserLinks(uuid)
 	if errExpand != nil {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -58,9 +66,9 @@ func (h *URLExpandHandler) UserURLs(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(links)
-	if err != nil {
-		utils.JSONError(w, err.Error(), http.StatusInternalServerError)
+	errEnc := json.NewEncoder(w).Encode(links)
+	if errEnc != nil {
+		utils.JSONError(w, errEnc.Error(), http.StatusInternalServerError)
 		return
 	}
 }

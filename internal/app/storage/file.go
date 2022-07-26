@@ -16,11 +16,11 @@ import (
 var _ Storage = (*fileStore)(nil)
 
 type fileStore struct {
-	mu       sync.Mutex
+	logger   *zap.Logger
 	urls     map[string]string
 	userURLs map[string][]UserURLs
 	filePath string
-	logger   *zap.Logger
+	mu       sync.Mutex
 }
 
 type urlRecord struct {

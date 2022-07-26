@@ -10,8 +10,8 @@ import (
 
 func TestNewSequence(t *testing.T) {
 	tests := []struct {
-		name string
 		want *sequence.Sequence
+		name string
 	}{
 		{
 			name: "Sequence object can be created",

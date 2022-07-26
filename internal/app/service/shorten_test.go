@@ -46,9 +46,9 @@ func TestNewURLShortenerService(t *testing.T) {
 		seq     sequence.Generator
 	}
 	tests := []struct {
-		name string
 		args args
 		want *URLShortenerService
+		name string
 	}{
 		{
 			name: "",

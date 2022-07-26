@@ -74,11 +74,11 @@ func TestMemory_Store(t *testing.T) {
 		url string
 	}
 	tests := []struct {
-		name             string
+		expectedElements fields
 		fields           fields
 		args             args
+		name             string
 		expectedLength   int
-		expectedElements fields
 	}{
 		{
 			name: "Long URL can be stored in memory struct by it's short encoded sequence",
@@ -122,8 +122,8 @@ func TestMemory_Store(t *testing.T) {
 
 func TestNewMemory(t *testing.T) {
 	tests := []struct {
-		name string
 		want *Memory
+		name string
 	}{
 		{
 			name: "Memory object can be created",

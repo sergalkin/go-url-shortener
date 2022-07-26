@@ -27,13 +27,13 @@ type db struct {
 }
 
 type linkRow struct {
-	ID            int64
+	CreatedAt     time.Time
 	URLHash       string
 	URL           string
-	UID           uuid.UUID
-	CreatedAt     time.Time
 	CorrelationID string
 	IsDeleted     bool
+	ID            int64
+	UID           uuid.UUID
 }
 
 type BatchRequest struct {
@@ -172,8 +172,8 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 
 	for rows.Next() {
 		var r linkRow
-		if err := rows.Scan(&r.URLHash, &r.URL); err != nil {
-			d.logger.Error(err.Error(), zap.Error(err))
+		if scanErr := rows.Scan(&r.URLHash, &r.URL); scanErr != nil {
+			d.logger.Error(scanErr.Error(), zap.Error(scanErr))
 			return userUrls, false
 		}
 
@@ -217,9 +217,9 @@ func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
 
 	q := "insert into links(url_hash, url, uid, correlation_id) values ($1, $2, $3, $4)"
 	for _, val := range br {
-		urlHash, err := seqGenerator.Generate(5)
-		if err != nil {
-			return []BatchLink{}, err
+		urlHash, errGen := seqGenerator.Generate(5)
+		if errGen != nil {
+			return []BatchLink{}, errGen
 		}
 
 		_, err = tx.Exec(ctx, q, urlHash, val.OriginalURL, uid, val.CorrelationID)

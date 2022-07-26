@@ -19,9 +19,9 @@ func TestJSONError(t *testing.T) {
 		code int
 	}
 	type want struct {
-		code        int
 		response    string
 		contentType string
+		code        int
 	}
 	tests := []struct {
 		name string

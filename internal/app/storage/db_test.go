@@ -14,7 +14,6 @@ import (
 func Test_db_Ping(t *testing.T) {
 	tests := []struct {
 		name string
-		do   func()
 	}{
 		{
 			name: "Can ping DB",
@@ -76,7 +75,7 @@ func BenchmarkDb_Store(b *testing.B) {
 
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			//do not stop here timer cause store need generated seq of letters, and it too takes time
+			// do not stop here timer cause store need generated seq of letters, and it too takes time
 			key, _ := seq.Generate(4)
 
 			conn.Store(&key, "test.com")
@@ -85,4 +84,20 @@ func BenchmarkDb_Store(b *testing.B) {
 	}
 
 	cfg.DatabaseDSN = ""
+}
+
+func Test_fanIn(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			"can fanIn",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ch := make([]chan BatchDelete, 1)
+			assert.NotNil(t, fanIn(ch...))
+		})
+	}
 }

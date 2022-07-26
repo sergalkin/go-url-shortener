@@ -32,9 +32,9 @@ func TestNewURLShortenerHandler(t *testing.T) {
 		service service.URLShorten
 	}
 	tests := []struct {
-		name string
 		args args
 		want *URLShortenerHandler
+		name string
 	}{
 		{
 			name: "URLShortenHandler can be created",
@@ -55,16 +55,16 @@ func TestNewURLShortenerHandler(t *testing.T) {
 
 func TestURLShortenerHandler_ShortenURL(t *testing.T) {
 	type want struct {
-		code        int
 		response    string
 		contentType string
+		code        int
 	}
 
 	tests := []struct {
 		name       string
 		body       string
-		want       want
 		urlHandler *URLShortenHandlerMock
+		want       want
 	}{
 		{
 			name: "On making POST request with proper body service will generate short URL and return it in response",
@@ -122,16 +122,16 @@ func TestURLShortenerHandler_ShortenURL(t *testing.T) {
 
 func TestURLShortenerHandler_APIShortenURL(t *testing.T) {
 	type want struct {
-		code        int
 		response    string
 		contentType string
+		code        int
 	}
 
 	tests := []struct {
 		name       string
 		body       string
-		want       want
 		urlHandler *URLShortenHandlerMock
+		want       want
 	}{
 		{
 			name: "On making POST request with json body service will generate short URL and return it in response",

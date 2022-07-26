@@ -13,10 +13,10 @@ import (
 var _ Storage = (*Memory)(nil)
 
 type Memory struct {
-	mu       sync.Mutex
+	logger   *zap.Logger
 	urls     map[string]string
 	userURLs map[string][]UserURLs
-	logger   *zap.Logger
+	mu       sync.Mutex
 }
 
 // UserURLs - container for ShortURL and OriginalURL
