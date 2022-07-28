@@ -12,6 +12,7 @@ type config struct {
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"` // base URL
 	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:""`             // path to file with stored URLs when using memory mode
 	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:""`                  // dsn used to establish connection with database
+	EnableHTTPS     bool   `env:"ENABLE_HTTPS" envDefault:""`                  // a value used to determine http or https server will be run
 }
 
 // OptionConfig - callback that can be provided to NewConfig to construct config with non default params.
@@ -64,6 +65,13 @@ func WithDatabaseConnection(addr string) OptionConfig {
 	}
 }
 
+// WithEnableHTTPS - Generate config with EnableHTTPS.
+func WithEnableHTTPS(isEnabled bool) OptionConfig {
+	return func(c *config) {
+		c.EnableHTTPS = isEnabled
+	}
+}
+
 // ServerAddress - Get ServerAddress from config.
 func ServerAddress() string {
 	return cfg.ServerAddress
@@ -82,4 +90,9 @@ func FileStoragePath() string {
 // DatabaseDSN - get DatabaseDSN from config.
 func DatabaseDSN() string {
 	return cfg.DatabaseDSN
+}
+
+// EnableHTTPS - get EnableHTTPS from config.
+func EnableHTTPS() bool {
+	return cfg.EnableHTTPS
 }

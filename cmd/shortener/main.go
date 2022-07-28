@@ -12,27 +12,35 @@ The flags are:
 		Sets FILE_STORAGE_PATH.
 	-d
 		Sets DATABASE_DSN.
+	-s
+		If flag provided, starts server with HTTPS.
 */
 package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
+	"github.com/sergalkin/go-url-shortener.git/pkg/certificate"
 	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
@@ -47,6 +55,7 @@ func init() {
 	baseURL := flag.String("b", config.BaseURL(), "BASE_URL")
 	fileStoragePath := flag.String("f", config.FileStoragePath(), "FILE_STORAGE_PATH")
 	databaseDSN := flag.String("d", config.DatabaseDSN(), "DATABASE_DSN")
+	enableHTTPS := flag.Bool("s", config.EnableHTTPS(), "ENABLE_HTTPS")
 	flag.Parse()
 
 	config.NewConfig(
@@ -54,6 +63,7 @@ func init() {
 		config.WithBaseURL(*baseURL),
 		config.WithFileStoragePath(*fileStoragePath),
 		config.WithDatabaseConnection(*databaseDSN),
+		config.WithEnableHTTPS(*enableHTTPS),
 	)
 
 	setDefaultValuesForBuildInfo()
@@ -111,12 +121,12 @@ func main() {
 		r.Delete("/user/urls", deleteHandler.Delete)
 	})
 
-	server := &http.Server{
-		Addr:    config.ServerAddress(),
-		Handler: r,
-	}
+	if config.EnableHTTPS() {
+		log.Panic(startHTTPSServer(r))
 
-	log.Panic(server.ListenAndServe())
+	} else {
+		log.Panic(startHTTPServer(r))
+	}
 }
 
 // setDefaultValuesForBuildInfo - resigns buildValues to "N/A", if after flag parsing they still have zero values
@@ -130,4 +140,54 @@ func setDefaultValuesForBuildInfo() {
 	if buildDate == "" {
 		buildDate = "N/A"
 	}
+}
+
+// startHTTPSServer - starts HTTPS server if -s flag was provided.
+func startHTTPSServer(r *chi.Mux) error {
+	pwd, errPwd := exec.Command("pwd").Output()
+	if errPwd != nil {
+		return errPwd
+	}
+
+	var path string
+	if !strings.Contains(string(pwd), "/cmd/shortener") {
+		path = strings.TrimSuffix(string(pwd), "\n") + "/cmd/shortener"
+	} else {
+		path = "."
+	}
+
+	if _, err := os.Stat(fmt.Sprintf("%s/cert.key", path)); errors.Is(err, os.ErrNotExist) {
+		certificate.Generate(path)
+	}
+
+	// конструируем менеджер TLS-сертификатов
+	manager := &autocert.Manager{
+		// директория для хранения сертификатов
+		Cache: autocert.DirCache("cache-dir"),
+		// функция, принимающая Terms of Service издателя сертификатов
+		Prompt: autocert.AcceptTOS,
+		// перечень доменов, для которых будут поддерживаться сертификаты
+		HostPolicy: autocert.HostWhitelist(config.ServerAddress()),
+	}
+
+	server := &http.Server{
+		Addr:    ":443",
+		Handler: r,
+		// для TLS-конфигурации используем менеджер сертификатов
+		TLSConfig: manager.TLSConfig(),
+	}
+
+	fmt.Println("HTTPS Server started.")
+	return server.ListenAndServeTLS(fmt.Sprintf("%s/cert.crt", path), fmt.Sprintf("%s/cert.key", path))
+}
+
+// startHTTPServer - starts HTTP server if -s flag was not provided.
+func startHTTPServer(r *chi.Mux) error {
+	server := &http.Server{
+		Addr:    config.ServerAddress(),
+		Handler: r,
+	}
+
+	fmt.Println("HTTP Server started.")
+	return server.ListenAndServe()
 }
