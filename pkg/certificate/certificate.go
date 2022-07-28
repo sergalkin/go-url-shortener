@@ -1,3 +1,4 @@
+// Package certificate - creates self-signed x509 certificate with key
 package certificate
 
 import (
@@ -14,6 +15,7 @@ import (
 	"time"
 )
 
+// Generate - creates self-signed x509 certificate with key in provided path
 func Generate(path string) {
 	// создаём шаблон сертификата
 	cert := &x509.Certificate{
