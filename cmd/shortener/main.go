@@ -14,6 +14,8 @@ The flags are:
 		Sets DATABASE_DSN.
 	-s
 		If flag provided, starts server with HTTPS.
+	-c
+		Path to config file. Must be in .json format.
 */
 package main
 
@@ -56,15 +58,20 @@ func init() {
 	fileStoragePath := flag.String("f", config.FileStoragePath(), "FILE_STORAGE_PATH")
 	databaseDSN := flag.String("d", config.DatabaseDSN(), "DATABASE_DSN")
 	enableHTTPS := flag.Bool("s", config.EnableHTTPS(), "ENABLE_HTTPS")
+	usingJSON := flag.String("c", config.JSONConfigPath(), "CONFIG PATH")
+
 	flag.Parse()
 
-	config.NewConfig(
+	c := config.NewConfig(
 		config.WithServerAddress(*address),
 		config.WithBaseURL(*baseURL),
 		config.WithFileStoragePath(*fileStoragePath),
 		config.WithDatabaseConnection(*databaseDSN),
 		config.WithEnableHTTPS(*enableHTTPS),
+		config.WithJSONConfig(*usingJSON),
 	)
+
+	c.SetJSONValues()
 
 	setDefaultValuesForBuildInfo()
 }
