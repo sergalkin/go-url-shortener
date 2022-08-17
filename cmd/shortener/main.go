@@ -24,12 +24,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -71,7 +72,9 @@ func init() {
 		config.WithJSONConfig(*usingJSON),
 	)
 
-	c.SetJSONValues()
+	if c.JSONConfigPath != "" {
+		c.SetJSONValues()
+	}
 
 	setDefaultValuesForBuildInfo()
 }
@@ -108,7 +111,10 @@ func main() {
 		fmt.Println(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctxContext, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	defer stop()
+
+	ctx, cancel := context.WithTimeout(ctxContext, 30*time.Second)
 	defer cancel()
 	defer db.Close(ctx)
 	dbHandler := handlers.NewDBHandler(db, logger)
@@ -129,10 +135,11 @@ func main() {
 	})
 
 	if config.EnableHTTPS() {
-		log.Panic(startHTTPSServer(r))
-
+		srv := startHTTPSServer(r, stop)
+		releaseResources(ctxContext, logger, srv, db)
 	} else {
-		log.Panic(startHTTPServer(r))
+		srv := startHTTPServer(r, stop)
+		releaseResources(ctxContext, logger, srv, db)
 	}
 }
 
@@ -150,10 +157,11 @@ func setDefaultValuesForBuildInfo() {
 }
 
 // startHTTPSServer - starts HTTPS server if -s flag was provided.
-func startHTTPSServer(r *chi.Mux) error {
+func startHTTPSServer(r *chi.Mux, stop context.CancelFunc) *http.Server {
 	pwd, errPwd := exec.Command("pwd").Output()
 	if errPwd != nil {
-		return errPwd
+		fmt.Println(errPwd)
+		stop()
 	}
 
 	var path string
@@ -185,16 +193,59 @@ func startHTTPSServer(r *chi.Mux) error {
 	}
 
 	fmt.Println("HTTPS Server started.")
-	return server.ListenAndServeTLS(fmt.Sprintf("%s/cert.crt", path), fmt.Sprintf("%s/cert.key", path))
+	go func() {
+		errS := server.ListenAndServeTLS(fmt.Sprintf("%s/cert.crt", path), fmt.Sprintf("%s/cert.key", path))
+		if errS != nil {
+			fmt.Println(errS.Error())
+			stop()
+		}
+	}()
+
+	return server
 }
 
 // startHTTPServer - starts HTTP server if -s flag was not provided.
-func startHTTPServer(r *chi.Mux) error {
+func startHTTPServer(r *chi.Mux, stop context.CancelFunc) *http.Server {
 	server := &http.Server{
 		Addr:    config.ServerAddress(),
 		Handler: r,
 	}
 
 	fmt.Println("HTTP Server started.")
-	return server.ListenAndServe()
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			fmt.Println(err.Error())
+			stop()
+		}
+	}()
+
+	return server
+}
+
+// releaseResources - realising resources, stopping db connection.
+func releaseResources(ctx context.Context, l *zap.Logger, srv *http.Server, db storage.DB) {
+	<-ctx.Done()
+	if ctx.Err() != nil {
+		fmt.Printf("Error:%v\n", ctx.Err())
+	}
+
+	l.Info("The service is shutting down...")
+
+	if db.HasNotNilConn() {
+		l.Info("Closing connection with database")
+
+		err := db.Close(ctx)
+		if err != nil {
+			l.Error("Could not close connection with database")
+		}
+
+		l.Info("Connection with database closed")
+	}
+
+	if err := srv.Shutdown(ctx); err != nil {
+		l.Info("app error exit", zap.Error(err))
+	}
+
+	l.Info("Done")
 }

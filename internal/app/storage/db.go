@@ -74,6 +74,8 @@ type DB interface {
 	// needs to be marked as soft deleted.
 	SoftDeleteUserURLs(uuid string, ids []string) error
 	DeleteThroughCh(channels ...chan BatchDelete)
+
+	HasNotNilConn() bool
 }
 
 const (
@@ -114,10 +116,15 @@ func (d *db) Ping(ctx context.Context) error {
 
 // Close - closes connection with database.
 func (d *db) Close(ctx context.Context) error {
-	if d.conn == nil {
-		return errors.New("error in connection to db")
+	if d.conn != nil {
+		err := d.conn.Close(ctx)
+		if err != nil {
+			return err
+		}
+		d.conn = nil
 	}
-	return d.conn.Close(ctx)
+
+	return nil
 }
 
 // Store - stores provided url by key in database
@@ -319,4 +326,8 @@ func (d *db) SoftDeleteUserURLs(uuid string, ids []string) error {
 	}
 
 	return nil
+}
+
+func (d *db) HasNotNilConn() bool {
+	return d.conn != nil
 }
