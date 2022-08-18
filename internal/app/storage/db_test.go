@@ -181,16 +181,16 @@ func Test_db_LinksByUUID(t *testing.T) {
 			)
 
 			conn, err := NewDBConnection(&zap.Logger{}, false)
-			conn.conn.Exec(context.Background(), "insert into links (url_hash, url, uid) values ('test', 'ya.ru', $1)", tt.uuid)
-
 			if err == nil {
+				conn.conn.Exec(context.Background(), "insert into links (url_hash, url, uid) values ('test', 'ya.ru', $1)", tt.uuid)
+
 				urls, result := conn.LinksByUUID(tt.uuid)
 
 				assert.NotEmpty(t, urls)
 				assert.True(t, result)
-			}
 
-			conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uuid+"'")
+				conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uuid+"'")
+			}
 
 			cfg.DatabaseDSN = ""
 		})
