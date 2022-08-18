@@ -131,7 +131,7 @@ func (c *config) SetJSONValues() {
 	v := reflect.ValueOf(*c)
 	isAllFieldsIsZeroValue := true
 	for i := 0; i < v.NumField(); i++ {
-		if v.Type().Field(i).Name != "JsonConfigPath" && !v.Field(i).IsZero() {
+		if v.Type().Field(i).Name != "JSONConfigPath" && !v.Field(i).IsZero() {
 			isAllFieldsIsZeroValue = false
 			break
 		}

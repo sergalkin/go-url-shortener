@@ -161,3 +161,105 @@ func TestWithServerAddress(t *testing.T) {
 		})
 	}
 }
+
+func TestWithEnableHTTPS(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Config WithEnableHTTPS can be created",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig(WithEnableHTTPS(true))
+			assert.True(t, EnableHTTPS())
+			c.EnableHTTPS = false
+		})
+	}
+}
+
+func TestEnableHTTPS(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "EnableHTTPS can be retrieved from config",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig()
+			c.EnableHTTPS = true
+			assert.True(t, EnableHTTPS())
+			c.EnableHTTPS = false
+		})
+	}
+}
+
+func TestJSONConfigPath(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "JSONConfigPath can be retrieved from config",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig()
+			c.JSONConfigPath = "test"
+			assert.Equal(t, "test", JSONConfigPath())
+			c.JSONConfigPath = ""
+		})
+	}
+}
+
+func TestWithJSONConfig(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Config WithEnableHTTPS can be created",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig(WithJSONConfig("test"))
+			assert.Equal(t, "test", JSONConfigPath())
+			c.JSONConfigPath = ""
+		})
+	}
+}
+
+func Test_config_SetJSONValues(t *testing.T) {
+	type fields struct {
+		ServerAddress   string
+		BaseURL         string
+		FileStoragePath string
+		DatabaseDSN     string
+		JSONConfigPath  string
+		EnableHTTPS     bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name: "Can set values from json file",
+			fields: fields{
+				JSONConfigPath: "config.json",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &config{
+				JSONConfigPath: tt.fields.JSONConfigPath,
+			}
+			assert.False(t, c.EnableHTTPS)
+			c.SetJSONValues()
+			assert.True(t, c.EnableHTTPS)
+		})
+	}
+}

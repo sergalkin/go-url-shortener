@@ -112,7 +112,7 @@ func TestMemory_Store(t *testing.T) {
 			m := NewMemory(zap.NewNop())
 			m.urls = tt.fields.urls
 
-			m.Store(&tt.args.key, tt.args.url)
+			m.Store(&tt.args.key, tt.args.url, "046cf584-df95-43fd-a2fc-f95a85c7bb95")
 
 			assert.Len(t, m.urls, tt.expectedLength)
 			reflect.DeepEqual(m.urls, tt.expectedElements)

@@ -33,7 +33,7 @@ func (d *DBMock) Close(ctx context.Context) error {
 	return nil
 }
 
-func (d *DBMock) Store(key *string, url string) {
+func (d *DBMock) Store(key *string, url string, uid string) {
 }
 func (d *DBMock) Get(key string) (string, bool, bool) {
 	return "", true, true

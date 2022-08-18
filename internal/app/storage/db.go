@@ -61,7 +61,7 @@ type DB interface {
 	// Close - closes connection.
 	Close(ctx context.Context) error
 	// Store - stores given url into database
-	Store(key *string, url string)
+	Store(key *string, url string, uid string)
 	// Get - trying to retrieve a URL from database by provided key.
 	// Get - returns URL, bool as status of retrieval, bool as status was URL deleted or is it still present.
 	Get(key string) (string, bool, bool)
@@ -128,16 +128,9 @@ func (d *db) Close(ctx context.Context) error {
 }
 
 // Store - stores provided url by key in database
-// additionally trying to get uuid from cookie uid and add its value to uid column in database.
-func (d *db) Store(key *string, url string) {
+func (d *db) Store(key *string, url string, uid string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	var uid string
-	err := utils.Decode(middleware.GetUUID(), &uid)
-	if err != nil {
-		d.logger.Error(err.Error(), zap.Error(err))
-	}
 
 	r, err := d.conn.Exec(ctx, insertLinks, *key, url, uid)
 	if err != nil {
