@@ -216,17 +216,18 @@ func Test_db_Get(t *testing.T) {
 			)
 
 			conn, err := NewDBConnection(&zap.Logger{}, false)
-			conn.conn.Exec(context.Background(), "insert into links (url_hash, url, uid) values ($1, 'ya.ru', $2)", tt.URLHash, tt.uuid)
 
 			if err == nil {
+				conn.conn.Exec(context.Background(), "insert into links (url_hash, url, uid) values ($1, 'ya.ru', $2)", tt.URLHash, tt.uuid)
+
 				url, result, isDeleted := conn.Get(tt.URLHash)
 
 				assert.NotEmpty(t, url)
 				assert.True(t, result)
 				assert.False(t, isDeleted)
-			}
 
-			conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uuid+"'")
+				conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uuid+"'")
+			}
 
 			cfg.DatabaseDSN = ""
 		})
@@ -289,9 +290,9 @@ func Test_db_DeleteThroughCh(t *testing.T) {
 
 			conn, err := NewDBConnection(&zap.Logger{}, false)
 
-			conn.conn.Exec(context.Background(), "insert into links (url_hash, url, uid) values ('test', 'ya.ru', $1)", tt.uid)
-
 			if err == nil {
+				conn.conn.Exec(context.Background(), "insert into links (url_hash, url, uid) values ('test', 'ya.ru', $1)", tt.uid)
+
 				conn.DeleteThroughCh(inputCh)
 				time.Sleep(250 * time.Millisecond)
 				r := conn.conn.QueryRow(context.Background(), "select is_deleted from links where uid =$1", tt.uid)
@@ -299,9 +300,9 @@ func Test_db_DeleteThroughCh(t *testing.T) {
 				r.Scan(&isDeleted)
 
 				assert.True(t, isDeleted)
-			}
 
-			conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uid+"'")
+				conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uid+"'")
+			}
 
 			cfg.DatabaseDSN = ""
 		})
@@ -332,11 +333,11 @@ func Test_db_Store(t *testing.T) {
 			if err == nil {
 				conn.Store(&tt.key, tt.url, tt.uid)
 				assert.NotEqual(t, "", tt.key)
+
+				conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uid+"'")
 			}
 
 			cfg.DatabaseDSN = ""
-
-			conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uid+"'")
 		})
 	}
 }
@@ -360,17 +361,18 @@ func Test_db_StoreModifiesKeyOnDuplicate(t *testing.T) {
 			)
 
 			conn, err := NewDBConnection(&zap.Logger{}, false)
-			conn.conn.Exec(context.Background(), "insert into links (url_hash, url, uid) values ('test', 'ya.ru', $1)", tt.uid)
 
 			if err == nil {
+				conn.conn.Exec(context.Background(), "insert into links (url_hash, url, uid) values ('test', 'ya.ru', $1)", tt.uid)
+
 				var key string
 				conn.Store(&key, tt.url, tt.uid)
 				assert.Equal(t, "test", key)
+
+				conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uid+"'")
 			}
 
 			cfg.DatabaseDSN = ""
-
-			conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.uid+"'")
 		})
 	}
 }
