@@ -129,7 +129,7 @@ func Test_fileStore_Store(t *testing.T) {
 			fs := NewFile(tt.fields.filePath, zap.NewNop())
 			fs.urls = tt.fields.urls
 
-			fs.Store(&tt.args.key, tt.args.url)
+			fs.Store(&tt.args.key, tt.args.url, "046cf584-df95-43fd-a2fc-f95a85c7bb95")
 			assert.NotEmpty(t, fs.urls)
 		})
 	}

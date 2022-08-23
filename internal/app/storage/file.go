@@ -72,7 +72,7 @@ func (m *fileStore) loadFromFile() error {
 // Store - store provided url in urls of fileStore struct using provided key
 // additionally gets UUID from cookie uid and stores that URL in userURL of fileStore struct
 // finally saves generated URL to file.
-func (m *fileStore) Store(key *string, url string) {
+func (m *fileStore) Store(key *string, url string, uid string) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
 

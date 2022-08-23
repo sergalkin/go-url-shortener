@@ -16,7 +16,9 @@ import (
 )
 
 type DBMock struct {
-	hasError bool
+	hasError  bool
+	hasConn   bool
+	isConnNil bool
 }
 
 func (d *DBMock) Ping(ctx context.Context) error {
@@ -31,7 +33,7 @@ func (d *DBMock) Close(ctx context.Context) error {
 	return nil
 }
 
-func (d *DBMock) Store(key *string, url string) {
+func (d *DBMock) Store(key *string, url string, uid string) {
 }
 func (d *DBMock) Get(key string) (string, bool, bool) {
 	return "", true, true
@@ -47,6 +49,10 @@ func (d *DBMock) SoftDeleteUserURLs(uuid string, ids []string) error {
 }
 
 func (d *DBMock) DeleteThroughCh(channels ...chan storage.BatchDelete) {
+}
+
+func (d *DBMock) HasNotNilConn() bool {
+	return d.isConnNil
 }
 
 func TestDBHandler_Ping(t *testing.T) {

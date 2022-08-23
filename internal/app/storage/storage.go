@@ -8,7 +8,7 @@ import (
 
 type Storage interface {
 	// Store - store given URL into storage with key as id.
-	Store(key *string, url string)
+	Store(key *string, url string, uid string)
 	// Get - trying to retrieve a URL from storage by provided key. As first bool value - returns was retrieval a
 	// success or not and as second bool value return is link still present in storage.
 	Get(key string) (string, bool, bool)

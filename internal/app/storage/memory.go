@@ -4,9 +4,6 @@ import (
 	"sync"
 
 	"go.uber.org/zap"
-
-	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
 
 // if Memory struct will no longer complains with Storage interface, code will be broken on building stage
@@ -35,17 +32,11 @@ func NewMemory(l *zap.Logger) *Memory {
 }
 
 // Store - storing provided URL in Memory using key.
-func (m *Memory) Store(key *string, url string) {
+func (m *Memory) Store(key *string, url string, uuid string) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
 
 	m.urls[*key] = url
-
-	var uuid string
-	err := utils.Decode(middleware.GetUUID(), &uuid)
-	if err != nil {
-		m.logger.Error(err.Error(), zap.Error(err))
-	}
 
 	m.userURLs[uuid] = append(m.userURLs[uuid], UserURLs{ShortURL: *key, OriginalURL: url})
 }

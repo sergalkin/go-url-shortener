@@ -12,27 +12,38 @@ The flags are:
 		Sets FILE_STORAGE_PATH.
 	-d
 		Sets DATABASE_DSN.
+	-s
+		If flag provided, starts server with HTTPS.
+	-c
+		Path to config file. Must be in .json format.
 */
 package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
+	"os"
+	"os/exec"
+	"os/signal"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
+	"github.com/sergalkin/go-url-shortener.git/pkg/certificate"
 	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
@@ -47,14 +58,23 @@ func init() {
 	baseURL := flag.String("b", config.BaseURL(), "BASE_URL")
 	fileStoragePath := flag.String("f", config.FileStoragePath(), "FILE_STORAGE_PATH")
 	databaseDSN := flag.String("d", config.DatabaseDSN(), "DATABASE_DSN")
+	enableHTTPS := flag.Bool("s", config.EnableHTTPS(), "ENABLE_HTTPS")
+	usingJSON := flag.String("c", config.JSONConfigPath(), "CONFIG PATH")
+
 	flag.Parse()
 
-	config.NewConfig(
+	c := config.NewConfig(
 		config.WithServerAddress(*address),
 		config.WithBaseURL(*baseURL),
 		config.WithFileStoragePath(*fileStoragePath),
 		config.WithDatabaseConnection(*databaseDSN),
+		config.WithEnableHTTPS(*enableHTTPS),
+		config.WithJSONConfig(*usingJSON),
 	)
+
+	if c.JSONConfigPath != "" {
+		c.SetJSONValues()
+	}
 
 	setDefaultValuesForBuildInfo()
 }
@@ -91,7 +111,10 @@ func main() {
 		fmt.Println(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctxContext, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	defer stop()
+
+	ctx, cancel := context.WithTimeout(ctxContext, 30*time.Second)
 	defer cancel()
 	defer db.Close(ctx)
 	dbHandler := handlers.NewDBHandler(db, logger)
@@ -111,12 +134,13 @@ func main() {
 		r.Delete("/user/urls", deleteHandler.Delete)
 	})
 
-	server := &http.Server{
-		Addr:    config.ServerAddress(),
-		Handler: r,
+	if config.EnableHTTPS() {
+		srv := startHTTPSServer(r, stop)
+		releaseResources(ctxContext, logger, srv, db)
+	} else {
+		srv := startHTTPServer(r, stop)
+		releaseResources(ctxContext, logger, srv, db)
 	}
-
-	log.Panic(server.ListenAndServe())
 }
 
 // setDefaultValuesForBuildInfo - resigns buildValues to "N/A", if after flag parsing they still have zero values
@@ -130,4 +154,98 @@ func setDefaultValuesForBuildInfo() {
 	if buildDate == "" {
 		buildDate = "N/A"
 	}
+}
+
+// startHTTPSServer - starts HTTPS server if -s flag was provided.
+func startHTTPSServer(r *chi.Mux, stop context.CancelFunc) *http.Server {
+	pwd, errPwd := exec.Command("pwd").Output()
+	if errPwd != nil {
+		fmt.Println(errPwd)
+		stop()
+	}
+
+	var path string
+	if !strings.Contains(string(pwd), "/cmd/shortener") {
+		path = strings.TrimSuffix(string(pwd), "\n") + "/cmd/shortener"
+	} else {
+		path = "."
+	}
+
+	if _, err := os.Stat(fmt.Sprintf("%s/cert.key", path)); errors.Is(err, os.ErrNotExist) {
+		certificate.Generate(path)
+	}
+
+	// конструируем менеджер TLS-сертификатов
+	manager := &autocert.Manager{
+		// директория для хранения сертификатов
+		Cache: autocert.DirCache("cache-dir"),
+		// функция, принимающая Terms of Service издателя сертификатов
+		Prompt: autocert.AcceptTOS,
+		// перечень доменов, для которых будут поддерживаться сертификаты
+		HostPolicy: autocert.HostWhitelist(config.ServerAddress()),
+	}
+
+	server := &http.Server{
+		Addr:    ":443",
+		Handler: r,
+		// для TLS-конфигурации используем менеджер сертификатов
+		TLSConfig: manager.TLSConfig(),
+	}
+
+	fmt.Println("HTTPS Server started.")
+	go func() {
+		errS := server.ListenAndServeTLS(fmt.Sprintf("%s/cert.crt", path), fmt.Sprintf("%s/cert.key", path))
+		if errS != nil {
+			fmt.Println(errS.Error())
+			stop()
+		}
+	}()
+
+	return server
+}
+
+// startHTTPServer - starts HTTP server if -s flag was not provided.
+func startHTTPServer(r *chi.Mux, stop context.CancelFunc) *http.Server {
+	server := &http.Server{
+		Addr:    config.ServerAddress(),
+		Handler: r,
+	}
+
+	fmt.Println("HTTP Server started.")
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			fmt.Println(err.Error())
+			stop()
+		}
+	}()
+
+	return server
+}
+
+// releaseResources - realising resources, stopping db connection.
+func releaseResources(ctx context.Context, l *zap.Logger, srv *http.Server, db storage.DB) {
+	<-ctx.Done()
+	if ctx.Err() != nil {
+		fmt.Printf("Error:%v\n", ctx.Err())
+	}
+
+	l.Info("The service is shutting down...")
+
+	if db.HasNotNilConn() {
+		l.Info("Closing connection with database")
+
+		err := db.Close(ctx)
+		if err != nil {
+			l.Error("Could not close connection with database")
+		}
+
+		l.Info("Connection with database closed")
+	}
+
+	if err := srv.Shutdown(ctx); err != nil {
+		l.Info("app error exit", zap.Error(err))
+	}
+
+	l.Info("Done")
 }
