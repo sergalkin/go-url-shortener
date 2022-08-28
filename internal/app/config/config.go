@@ -17,6 +17,7 @@ type config struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"" json:"file_storage_path"`         // path to file with stored URLs when using memory mode
 	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:"" json:"database_dsn"`                   // dsn used to establish connection with database
 	JSONConfigPath  string `env:"CONFIG" envDefault:""`                                             // a path to config file
+	TrustedSubnet   string `env:"TRUSTED_SUBNET" envDefault:"" json:"trusted_subnet"`               // a trusted IP address
 	EnableHTTPS     bool   `env:"ENABLE_HTTPS" envDefault:"" json:"enable_https"`                   // a value used to determine http or https server will be run
 }
 
@@ -84,6 +85,13 @@ func WithJSONConfig(path string) OptionConfig {
 	}
 }
 
+// WithTrustedSubnet - Generate config with TrustedSubnet.
+func WithTrustedSubnet(s string) OptionConfig {
+	return func(c *config) {
+		c.TrustedSubnet = s
+	}
+}
+
 // ServerAddress - Get ServerAddress from config.
 func ServerAddress() string {
 	return cfg.ServerAddress
@@ -112,6 +120,11 @@ func EnableHTTPS() bool {
 // JSONConfigPath - get path to config.json file
 func JSONConfigPath() string {
 	return cfg.JSONConfigPath
+}
+
+// TrustedSubnet - get trusted IP
+func TrustedSubnet() string {
+	return cfg.TrustedSubnet
 }
 
 // SetJSONValues - set config zero values to json.config values

@@ -15,6 +15,10 @@ type shortenStorageMock struct {
 	IsKeyFoundInStore bool
 }
 
+func (sm *shortenStorageMock) Stats() (int, int, error) {
+	return 0, 0, nil
+}
+
 func (sm *shortenStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
 	return nil, true
 }
@@ -51,7 +55,7 @@ func TestNewURLShortenerService(t *testing.T) {
 		name string
 	}{
 		{
-			name: "",
+			name: "New URL Shortener service can be created",
 			args: args{
 				storage: &shortenStorageMock{},
 				seq:     &sequenceMock{},

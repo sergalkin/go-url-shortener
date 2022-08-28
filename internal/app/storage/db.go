@@ -74,6 +74,7 @@ type DB interface {
 	// needs to be marked as soft deleted.
 	SoftDeleteUserURLs(uuid string, ids []string) error
 	DeleteThroughCh(channels ...chan BatchDelete)
+	Stats() (int, int, error)
 
 	HasNotNilConn() bool
 }
@@ -81,6 +82,7 @@ type DB interface {
 const (
 	getURLHash  = `select url_hash from links where url = $1`
 	insertLinks = `insert into links (url_hash, url, uid) values ($1,$2,$3) ON CONFLICT ON CONSTRAINT links_url_key DO NOTHING`
+	stats       = `select count(id) as links,  count(Distinct uid) as url from links where is_deleted = false`
 )
 
 // NewDBConnection - creates new database connection and attempts to run migrations.
@@ -323,4 +325,17 @@ func (d *db) SoftDeleteUserURLs(uuid string, ids []string) error {
 
 func (d *db) HasNotNilConn() bool {
 	return d.conn != nil
+}
+
+// Stats - returns count of urls and users stored in DB. Counts only non-soft deleted records.
+func (d *db) Stats() (int, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	var url, users int
+	if err := d.conn.QueryRow(ctx, stats).Scan(&url, &users); err != nil {
+		return 0, 0, err
+	}
+
+	return url, users, nil
 }

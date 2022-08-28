@@ -14,6 +14,10 @@ type expandStorageMock struct {
 	IsKeyFoundInStore bool
 }
 
+func (sm *expandStorageMock) Stats() (int, int, error) {
+	return 0, 0, nil
+}
+
 func (sm *expandStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
 	if sm.IsKeyFoundInStore {
 		var sl []storage.UserURLs

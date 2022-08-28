@@ -376,3 +376,28 @@ func Test_db_StoreModifiesKeyOnDuplicate(t *testing.T) {
 		})
 	}
 }
+
+func Test_db_Stats(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Stats can be called via db manager.",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := config.NewConfig(
+				config.WithDatabaseConnection("postgres://root:root@localhost:5432/postgres?sslmode=disable"),
+			)
+
+			conn, err := NewDBConnection(zap.NewNop(), false)
+			if err == nil {
+				_, _, errStats := conn.Stats()
+				assert.NoError(t, errStats)
+			}
+
+			cfg.DatabaseDSN = ""
+		})
+	}
+}

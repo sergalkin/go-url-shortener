@@ -17,6 +17,10 @@ type DBMock struct {
 	isConnNil bool
 }
 
+func (d *DBMock) Stats() (int, int, error) {
+	return 0, 0, nil
+}
+
 func (d *DBMock) Ping(ctx context.Context) error {
 	if d.hasError {
 		return errors.New("error")

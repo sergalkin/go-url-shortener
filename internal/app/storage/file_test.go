@@ -280,3 +280,41 @@ func Test_fileStore_LinksByUUID(t *testing.T) {
 		})
 	}
 }
+
+func Test_fileStore_Stats(t *testing.T) {
+	type fields struct {
+		logger   *zap.Logger
+		urls     map[string]string
+		userURLs map[string][]UserURLs
+	}
+	tests := []struct {
+		fields fields
+		name   string
+	}{
+		{
+			name: "Stats can be retrieved via file manager",
+			fields: fields{
+				logger: zap.NewNop(),
+				urls:   map[string]string{"test": "ya.ru", "test2": "vk.ru"},
+				userURLs: map[string][]UserURLs{"test": append(make([]UserURLs, 1), UserURLs{
+					ShortURL:    "short",
+					OriginalURL: "long",
+				}),
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &fileStore{
+				logger:   tt.fields.logger,
+				urls:     tt.fields.urls,
+				userURLs: tt.fields.userURLs,
+			}
+			got, got1, err := m.Stats()
+			assert.Equal(t, 2, got)
+			assert.Equal(t, 1, got1)
+			assert.NoError(t, err)
+		})
+	}
+}

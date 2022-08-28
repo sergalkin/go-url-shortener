@@ -16,6 +16,8 @@ The flags are:
 		If flag provided, starts server with HTTPS.
 	-c
 		Path to config file. Must be in .json format.
+	-t
+		Sets Trusted Subnet
 */
 package main
 
@@ -59,6 +61,7 @@ func init() {
 	fileStoragePath := flag.String("f", config.FileStoragePath(), "FILE_STORAGE_PATH")
 	databaseDSN := flag.String("d", config.DatabaseDSN(), "DATABASE_DSN")
 	enableHTTPS := flag.Bool("s", config.EnableHTTPS(), "ENABLE_HTTPS")
+	trustedSubnet := flag.String("t", config.TrustedSubnet(), "TRUSTED_SUBNET")
 	usingJSON := flag.String("c", config.JSONConfigPath(), "CONFIG PATH")
 
 	flag.Parse()
@@ -69,6 +72,7 @@ func init() {
 		config.WithFileStoragePath(*fileStoragePath),
 		config.WithDatabaseConnection(*databaseDSN),
 		config.WithEnableHTTPS(*enableHTTPS),
+		config.WithTrustedSubnet(*trustedSubnet),
 		config.WithJSONConfig(*usingJSON),
 	)
 
@@ -105,6 +109,7 @@ func main() {
 
 	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, seq, logger))
 	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s, logger))
+	internalHandler := handlers.NewInternalHandler(service.NewInternalService(s, logger))
 
 	db, err := storage.NewDBConnection(logger, true)
 	if err != nil {
@@ -132,6 +137,10 @@ func main() {
 		r.Post("/shorten/batch", batchHandler.BatchInsert)
 		r.Get("/user/urls", expandHandler.UserURLs)
 		r.Delete("/user/urls", deleteHandler.Delete)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.TrustedSubnet)
+			r.Get("/internal/stats", internalHandler.Stats)
+		})
 	})
 
 	if config.EnableHTTPS() {

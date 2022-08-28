@@ -121,3 +121,7 @@ func (m *fileStore) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	links, ok := m.userURLs[uuid]
 	return links, ok
 }
+
+func (m *fileStore) Stats() (int, int, error) {
+	return len(m.urls), len(m.userURLs), nil
+}
