@@ -299,3 +299,38 @@ func TestTrustedSubnet(t *testing.T) {
 		})
 	}
 }
+
+func TestWithGRPCPort(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Config WithGRPCPort can be created",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig(WithGRPCPort(":3200"))
+			assert.Equal(t, ":3200", GRPCPort())
+			c.GRPCPort = ""
+		})
+	}
+}
+
+func TestGRPCPort(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "GRPCPort can be retrieved from config",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig()
+			c.GRPCPort = ":3200"
+			assert.Equal(t, ":3200", GRPCPort())
+			c.GRPCPort = ""
+		})
+	}
+}

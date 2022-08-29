@@ -32,7 +32,13 @@ func NewURLDeleteService(storage storage.DB, l *zap.Logger) *URLDeleteService {
 
 // Delete - soft delete URL.
 func (s *URLDeleteService) Delete(r *http.Request) error {
-	uid, data, err := getDataFromBody(s, r)
+	var uid string
+	err := utils.Decode(middleware.GetUUID(), &uid)
+	if err != nil {
+		s.logger.Error(err.Error(), zap.Error(err))
+		return err
+	}
+	data, err := getDataFromBody(s, r)
 	if err != nil {
 		return err
 	}
@@ -46,27 +52,20 @@ func (s *URLDeleteService) Delete(r *http.Request) error {
 }
 
 // getDataFromBody - a helper function to read data from body and get uuid from uid cookie.
-func getDataFromBody(s *URLDeleteService, r *http.Request) (string, []string, error) {
-	var uid string
-	err := utils.Decode(middleware.GetUUID(), &uid)
-	if err != nil {
-		s.logger.Error(err.Error(), zap.Error(err))
-		return "", nil, err
-	}
-
+func getDataFromBody(s *URLDeleteService, r *http.Request) ([]string, error) {
 	b, errB := ioutil.ReadAll(r.Body)
 	if errB != nil {
-		return "", nil, err
+		return nil, errB
 	}
 
 	var arr []string
-	err = json.Unmarshal(b, &arr)
+	err := json.Unmarshal(b, &arr)
 	if err != nil {
 		s.logger.Error(err.Error(), zap.Error(err))
-		return "", nil, err
+		return nil, err
 	}
 
-	return uid, arr, nil
+	return arr, nil
 }
 
 // generateCh - generates and put into channel storage.BatchDelete

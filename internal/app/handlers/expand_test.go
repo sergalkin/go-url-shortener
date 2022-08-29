@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/storage"
 )
@@ -111,6 +112,34 @@ func TestURLExpandHandler_ExpandURL(t *testing.T) {
 			} else {
 				assert.Equal(t, "yandex.ru", resp.Request.URL.Host)
 			}
+		})
+	}
+}
+
+func TestURLExpandHandler_UserURLs(t *testing.T) {
+	type fields struct {
+		service service.URLExpand
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name:   "can retrieve list of URLs",
+			fields: fields{service: &URLExpandHandlerMock{}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := chi.NewRouter()
+			r.Use(middleware.Cookie)
+			r.Get("/user/urls", NewURLExpandHandler(tt.fields.service).UserURLs)
+
+			ts := httptest.NewServer(r)
+			resp, body := expandTestRequest(t, ts, http.MethodGet, "/user/urls")
+			defer resp.Body.Close()
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			assert.NotEmpty(t, body)
 		})
 	}
 }

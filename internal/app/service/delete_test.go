@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"errors"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -105,6 +108,34 @@ func Test_generateCh(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotNil(t, generateCh(tt.args.uid, tt.args.data))
+		})
+	}
+}
+
+func Test_getDataFromBody(t *testing.T) {
+	type args struct {
+		s *URLDeleteService
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 []string
+	}{
+		{
+			name: "Can get data from body",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			request := http.Request{}
+			content := `["a", "b", "c"]`
+			request.Body = ioutil.NopCloser(strings.NewReader(content))
+			got1, err := getDataFromBody(tt.args.s, &request)
+
+			//assert.Equal(t, "", got)
+			assert.NotEmpty(t, got1)
+			assert.NoError(t, err)
 		})
 	}
 }
