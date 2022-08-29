@@ -13,9 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/migrations"
-	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 	"github.com/sergalkin/go-url-shortener.git/pkg/sequence"
 )
 
@@ -69,7 +67,7 @@ type DB interface {
 	// and false of failure.
 	LinksByUUID(uuid string) ([]UserURLs, bool)
 	// BatchInsert - mass insert provided links into database
-	BatchInsert([]BatchRequest) ([]BatchLink, error)
+	BatchInsert([]BatchRequest, string) ([]BatchLink, error)
 	// SoftDeleteUserURLs - marks provided links as deleted. uuid - is user unique id, ids - is slice of links that
 	// needs to be marked as soft deleted.
 	SoftDeleteUserURLs(uuid string, ids []string) error
@@ -212,7 +210,7 @@ func (d *db) LinksByUUID(uuid string) ([]UserURLs, bool) {
 
 // BatchInsert - batch insert links to database with CorrelationID
 // additionally adds uuid to uid column in database gotten form uid cookie.
-func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
+func (d *db) BatchInsert(br []BatchRequest, uid string) ([]BatchLink, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
@@ -224,12 +222,6 @@ func (d *db) BatchInsert(br []BatchRequest) ([]BatchLink, error) {
 
 	seqGenerator := sequence.NewSequence()
 	batchLinks := make([]BatchLink, 0)
-
-	var uid string
-	err = utils.Decode(middleware.GetUUID(), &uid)
-	if err != nil {
-		return []BatchLink{}, err
-	}
 
 	q := "insert into links(url_hash, url, uid, correlation_id) values ($1, $2, $3, $4)"
 	for _, val := range br {

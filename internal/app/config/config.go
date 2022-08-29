@@ -18,6 +18,7 @@ type config struct {
 	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:"" json:"database_dsn"`                   // dsn used to establish connection with database
 	JSONConfigPath  string `env:"CONFIG" envDefault:""`                                             // a path to config file
 	TrustedSubnet   string `env:"TRUSTED_SUBNET" envDefault:"" json:"trusted_subnet"`               // a trusted IP address
+	GRPCPort        string `env:"GRPC_PORT" envDefault:"" json:"grpc_port"`                         // a port on which gRPC will be started
 	EnableHTTPS     bool   `env:"ENABLE_HTTPS" envDefault:"" json:"enable_https"`                   // a value used to determine http or https server will be run
 }
 
@@ -92,6 +93,13 @@ func WithTrustedSubnet(s string) OptionConfig {
 	}
 }
 
+// WithGRPCPort - Generate config with GRPCPort.
+func WithGRPCPort(s string) OptionConfig {
+	return func(c *config) {
+		c.GRPCPort = s
+	}
+}
+
 // ServerAddress - Get ServerAddress from config.
 func ServerAddress() string {
 	return cfg.ServerAddress
@@ -117,17 +125,22 @@ func EnableHTTPS() bool {
 	return cfg.EnableHTTPS
 }
 
-// JSONConfigPath - get path to config.json file
+// JSONConfigPath - get path to config.json file.
 func JSONConfigPath() string {
 	return cfg.JSONConfigPath
 }
 
-// TrustedSubnet - get trusted IP
+// TrustedSubnet - get trusted IP.
 func TrustedSubnet() string {
 	return cfg.TrustedSubnet
 }
 
-// SetJSONValues - set config zero values to json.config values
+// GRPCPort - get port on which gRPC is started.
+func GRPCPort() string {
+	return cfg.GRPCPort
+}
+
+// SetJSONValues - set config zero values to json.config values.
 func (c *config) SetJSONValues() {
 	// Open jsonFile
 	jsonFile, err := os.Open(c.JSONConfigPath)
@@ -140,7 +153,7 @@ func (c *config) SetJSONValues() {
 
 	// iterating over config struct via reflection to check for zero values,
 	// if it has at least one field with none zero value, we do nothing, otherwise we will unmarshal data from
-	// config.json file to config struct
+	// config.json file to config struct.
 	v := reflect.ValueOf(*c)
 	isAllFieldsIsZeroValue := true
 	for i := 0; i < v.NumField(); i++ {

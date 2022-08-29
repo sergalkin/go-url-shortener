@@ -45,7 +45,7 @@ func (d *DBMock) Get(key string) (string, bool, bool) {
 func (d *DBMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
 	return nil, false
 }
-func (d *DBMock) BatchInsert([]storage.BatchRequest) ([]storage.BatchLink, error) {
+func (d *DBMock) BatchInsert([]storage.BatchRequest, string) ([]storage.BatchLink, error) {
 	return nil, nil
 }
 func (d *DBMock) SoftDeleteUserURLs(uuid string, ids []string) error {

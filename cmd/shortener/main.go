@@ -26,7 +26,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -41,6 +43,7 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/grpc"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
@@ -62,6 +65,7 @@ func init() {
 	databaseDSN := flag.String("d", config.DatabaseDSN(), "DATABASE_DSN")
 	enableHTTPS := flag.Bool("s", config.EnableHTTPS(), "ENABLE_HTTPS")
 	trustedSubnet := flag.String("t", config.TrustedSubnet(), "TRUSTED_SUBNET")
+	grpcPort := flag.String("g", config.GRPCPort(), "GRPC_PORT")
 	usingJSON := flag.String("c", config.JSONConfigPath(), "CONFIG PATH")
 
 	flag.Parse()
@@ -73,6 +77,7 @@ func init() {
 		config.WithDatabaseConnection(*databaseDSN),
 		config.WithEnableHTTPS(*enableHTTPS),
 		config.WithTrustedSubnet(*trustedSubnet),
+		config.WithGRPCPort(*grpcPort),
 		config.WithJSONConfig(*usingJSON),
 	)
 
@@ -107,9 +112,14 @@ func main() {
 	}
 	seq := sequence.NewSequence()
 
-	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, seq, logger))
-	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s, logger))
-	internalHandler := handlers.NewInternalHandler(service.NewInternalService(s, logger))
+	shortenService := service.NewURLShortenerService(s, seq, logger)
+	shortenHandler := handlers.NewURLShortenerHandler(shortenService)
+
+	expandService := service.NewURLExpandService(s, logger)
+	expandHandler := handlers.NewURLExpandHandler(expandService)
+
+	internalService := service.NewInternalService(s, logger)
+	internalHandler := handlers.NewInternalHandler(internalService)
 
 	db, err := storage.NewDBConnection(logger, true)
 	if err != nil {
@@ -143,12 +153,29 @@ func main() {
 		})
 	})
 
+	go startGRPCServer(db, internalService, shortenService, expandService)
+
 	if config.EnableHTTPS() {
 		srv := startHTTPSServer(r, stop)
 		releaseResources(ctxContext, logger, srv, db)
 	} else {
 		srv := startHTTPServer(r, stop)
 		releaseResources(ctxContext, logger, srv, db)
+	}
+}
+
+// startGRPCServer - passed to gRPC server needed services and starts it.
+func startGRPCServer(db storage.DB, internal service.Internal, shorten service.URLShorten, expand service.URLExpand) {
+	server := grpc.NewServer(db, internal, shorten, expand)
+
+	listen, err := net.Listen("tcp", ":"+config.GRPCPort())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("gRPC Server started.")
+	if errServe := server.Serve(listen); errServe != nil {
+		log.Fatal(errServe)
 	}
 }
 
