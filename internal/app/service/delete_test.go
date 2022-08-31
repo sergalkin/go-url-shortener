@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"errors"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,6 +18,10 @@ type DBMock struct {
 	hasError  bool
 	hasConn   bool
 	isConnNil bool
+}
+
+func (d *DBMock) Stats() (int, int, error) {
+	return 0, 0, nil
 }
 
 func (d *DBMock) Ping(ctx context.Context) error {
@@ -37,7 +44,7 @@ func (d *DBMock) Get(key string) (string, bool, bool) {
 func (d *DBMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
 	return nil, false
 }
-func (d *DBMock) BatchInsert([]storage.BatchRequest) ([]storage.BatchLink, error) {
+func (d *DBMock) BatchInsert([]storage.BatchRequest, string) ([]storage.BatchLink, error) {
 	return nil, nil
 }
 func (d *DBMock) SoftDeleteUserURLs(uuid string, ids []string) error {
@@ -101,6 +108,34 @@ func Test_generateCh(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotNil(t, generateCh(tt.args.uid, tt.args.data))
+		})
+	}
+}
+
+func Test_getDataFromBody(t *testing.T) {
+	type args struct {
+		s *URLDeleteService
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 []string
+	}{
+		{
+			name: "Can get data from body",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			request := http.Request{}
+			content := `["a", "b", "c"]`
+			request.Body = ioutil.NopCloser(strings.NewReader(content))
+			got1, err := getDataFromBody(tt.args.s, &request)
+
+			//assert.Equal(t, "", got)
+			assert.NotEmpty(t, got1)
+			assert.NoError(t, err)
 		})
 	}
 }

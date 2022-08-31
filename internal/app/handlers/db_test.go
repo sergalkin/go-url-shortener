@@ -21,6 +21,10 @@ type DBMock struct {
 	isConnNil bool
 }
 
+func (d *DBMock) Stats() (int, int, error) {
+	return 0, 0, nil
+}
+
 func (d *DBMock) Ping(ctx context.Context) error {
 	if d.hasError {
 		return errors.New("error")
@@ -41,7 +45,7 @@ func (d *DBMock) Get(key string) (string, bool, bool) {
 func (d *DBMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
 	return nil, false
 }
-func (d *DBMock) BatchInsert([]storage.BatchRequest) ([]storage.BatchLink, error) {
+func (d *DBMock) BatchInsert([]storage.BatchRequest, string) ([]storage.BatchLink, error) {
 	return nil, nil
 }
 func (d *DBMock) SoftDeleteUserURLs(uuid string, ids []string) error {

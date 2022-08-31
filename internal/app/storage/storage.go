@@ -15,6 +15,8 @@ type Storage interface {
 	// LinksByUUID - trying to retrieve slice of UserURLs. On successful retrieval returns true as bool value and false of
 	// failure.
 	LinksByUUID(uuid string) ([]UserURLs, bool)
+	// Stats - returns count of urls and users stored. Can be accessed only via trusted subnet.
+	Stats() (int, int, error)
 }
 
 // NewStorage - creates Storage implementation based on config options.

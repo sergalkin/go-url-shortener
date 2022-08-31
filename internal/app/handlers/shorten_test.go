@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 )
 
@@ -20,7 +21,7 @@ type URLShortenHandlerMock struct {
 	hasErrorInShortenURL bool
 }
 
-func (u *URLShortenHandlerMock) ShortenURL(url string) (string, error) {
+func (u *URLShortenHandlerMock) ShortenURL(url string, uid string) (string, error) {
 	if u.hasErrorInShortenURL {
 		return "", errors.New("error")
 	}
@@ -106,6 +107,7 @@ func TestURLShortenerHandler_ShortenURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
+			r.Use(middleware.Cookie)
 			r.Post("/", NewURLShortenerHandler(tt.urlHandler).ShortenURL)
 
 			ts := httptest.NewServer(r)
@@ -185,6 +187,7 @@ func TestURLShortenerHandler_APIShortenURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
+			r.Use(middleware.Cookie)
 			r.Post("/api/shorten", NewURLShortenerHandler(tt.urlHandler).APIShortenURL)
 
 			ts := httptest.NewServer(r)

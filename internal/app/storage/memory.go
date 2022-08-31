@@ -60,3 +60,7 @@ func (m *Memory) LinksByUUID(uuid string) ([]UserURLs, bool) {
 	userLinks, ok := m.userURLs[uuid]
 	return userLinks, ok
 }
+
+func (m *Memory) Stats() (int, int, error) {
+	return len(m.urls), len(m.userURLs), nil
+}

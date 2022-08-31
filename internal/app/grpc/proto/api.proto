@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+option go_package = "github.com/sergalkin/go-url-shortener/internal/app/grpc/proto";
+
+package grpc;
+
+message EmptyRequest {}
+
+message ShortenURLRequest {
+    string url = 1;
+    string user_id = 2;
+}
+message ShortenURLResponse {
+    string result = 1;
+    string user_id = 2;
+    string error = 3;
+}
+
+message ExpandURLRequest {
+    string short_url = 1;
+}
+message ExpandURLResponse {
+    string original_url = 1;
+    string error = 2;
+}
+
+message GetUserURLsRequest {
+    string user_id = 1;
+}
+message GetUserURLsResponse {
+    message Record {
+        string short_url = 1;
+        string original_url = 2;
+    }
+    repeated Record records = 1;
+    string error = 2;
+}
+
+message BatchInsertRequest {
+    message Records {
+        string correlation_id = 1;
+        string url = 2;
+    }
+    repeated Records records = 1;
+    string user_id = 2;
+}
+message BatchInsertResponse {
+    message Records {
+        string correlation_id = 1;
+        string short_url = 2;
+    }
+    repeated Records records = 1;
+    string user_id = 2;
+    string error = 3;
+}
+
+message DeleteURLsRequest {
+    repeated string keys = 1;
+    string user_id = 2;
+}
+message DeleteURLsResponse {
+    string error = 1;
+}
+
+message PingResponse {
+    bool ok = 1;
+}
+
+message StatsResponse {
+    int32 urls = 1;
+    int32 users = 2;
+    string error = 3;
+}
+
+service Shortener {
+    rpc ShortenURL (ShortenURLRequest) returns (ShortenURLResponse);
+    rpc ExpandURL (ExpandURLRequest) returns (ExpandURLResponse);
+    rpc GetUserURLs (GetUserURLsRequest) returns (GetUserURLsResponse);
+    rpc BatchInsert (BatchInsertRequest) returns (BatchInsertResponse);
+    rpc DeleteURLs (DeleteURLsRequest) returns (DeleteURLsResponse);
+    rpc Ping (EmptyRequest) returns (PingResponse);
+    rpc Stats (EmptyRequest) returns (StatsResponse);
+}

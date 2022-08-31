@@ -376,3 +376,69 @@ func Test_db_StoreModifiesKeyOnDuplicate(t *testing.T) {
 		})
 	}
 }
+
+func Test_db_Stats(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Stats can be called via db manager.",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := config.NewConfig(
+				config.WithDatabaseConnection("postgres://root:root@localhost:5432/postgres?sslmode=disable"),
+			)
+
+			conn, err := NewDBConnection(zap.NewNop(), false)
+			if err == nil {
+				_, _, errStats := conn.Stats()
+				assert.NoError(t, errStats)
+			}
+
+			cfg.DatabaseDSN = ""
+		})
+	}
+}
+
+func Test_db_BatchInsert(t *testing.T) {
+	type args struct {
+		br  []BatchRequest
+		uid string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []BatchLink
+	}{
+		{
+			name: "can batch insert",
+			args: args{
+				br: []BatchRequest{
+					{CorrelationID: "1", OriginalURL: "ya.ru"},
+					{CorrelationID: "1", OriginalURL: "test.ru"},
+				},
+				uid: "66f29390-381c-4a6a-9df9-74a0247ebe72",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := config.NewConfig(
+				config.WithDatabaseConnection("postgres://root:root@localhost:5432/postgres?sslmode=disable"),
+			)
+
+			conn, err := NewDBConnection(&zap.Logger{}, false)
+
+			if err == nil {
+				res, errIns := conn.BatchInsert(tt.args.br, tt.args.uid)
+				assert.NoError(t, errIns)
+				assert.Len(t, res, 2)
+				conn.conn.Exec(context.Background(), "delete from links where uid = '"+tt.args.uid+"'")
+			}
+
+			cfg.DatabaseDSN = ""
+		})
+	}
+}

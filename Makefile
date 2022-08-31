@@ -1,4 +1,4 @@
-.PHONY: test show-coverage run file-run db-run run-ld
+.PHONY: test show-coverage run file-run db-run run-ld proto db-with-grpc
 
 test:
 	 go test ./... -coverprofile cp.out
@@ -20,3 +20,9 @@ run-ld:
 
 run-checks:
 	go run cmd/staticlint/main.go -builtin -static -extra ./...
+
+proto:
+	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative internal/app/grpc/proto/api.proto
+
+db-with-grpc:
+	go run cmd/shortener/main.go -d="postgres://root:root@localhost:5432/postgres?sslmode=disable" -g="3200"

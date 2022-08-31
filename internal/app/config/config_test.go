@@ -239,6 +239,7 @@ func Test_config_SetJSONValues(t *testing.T) {
 		FileStoragePath string
 		DatabaseDSN     string
 		JSONConfigPath  string
+		TrustedSubnet   string
 		EnableHTTPS     bool
 	}
 	tests := []struct {
@@ -260,6 +261,76 @@ func Test_config_SetJSONValues(t *testing.T) {
 			assert.False(t, c.EnableHTTPS)
 			c.SetJSONValues()
 			assert.True(t, c.EnableHTTPS)
+		})
+	}
+}
+
+func TestWithTrustedSubnet(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Config TrustedSubnet can be created",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig(WithTrustedSubnet("test"))
+			assert.Equal(t, "test", TrustedSubnet())
+			c.TrustedSubnet = ""
+		})
+	}
+}
+
+func TestTrustedSubnet(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "TrustedSubnet can be retrieved from config",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig()
+			c.TrustedSubnet = "test"
+			assert.Equal(t, "test", TrustedSubnet())
+			c.TrustedSubnet = ""
+		})
+	}
+}
+
+func TestWithGRPCPort(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Config WithGRPCPort can be created",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig(WithGRPCPort(":3200"))
+			assert.Equal(t, ":3200", GRPCPort())
+			c.GRPCPort = ""
+		})
+	}
+}
+
+func TestGRPCPort(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "GRPCPort can be retrieved from config",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig()
+			c.GRPCPort = ":3200"
+			assert.Equal(t, ":3200", GRPCPort())
+			c.GRPCPort = ""
 		})
 	}
 }

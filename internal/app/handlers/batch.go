@@ -48,7 +48,7 @@ func (h *BatchHandler) BatchInsert(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	batchLinks, err := h.storage.BatchInsert(requestData)
+	batchLinks, err := h.storage.BatchInsert(requestData, uid)
 	if err != nil {
 		h.logger.Error(err.Error(), zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)

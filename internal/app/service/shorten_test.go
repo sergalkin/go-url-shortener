@@ -15,6 +15,10 @@ type shortenStorageMock struct {
 	IsKeyFoundInStore bool
 }
 
+func (sm *shortenStorageMock) Stats() (int, int, error) {
+	return 0, 0, nil
+}
+
 func (sm *shortenStorageMock) LinksByUUID(uuid string) ([]storage.UserURLs, bool) {
 	return nil, true
 }
@@ -51,7 +55,7 @@ func TestNewURLShortenerService(t *testing.T) {
 		name string
 	}{
 		{
-			name: "",
+			name: "New URL Shortener service can be created",
 			args: args{
 				storage: &shortenStorageMock{},
 				seq:     &sequenceMock{},
@@ -77,6 +81,7 @@ func TestURLShortenerService_ShortenURL(t *testing.T) {
 	}
 	type args struct {
 		url string
+		uid string
 	}
 	tests := []struct {
 		name   string
@@ -89,7 +94,7 @@ func TestURLShortenerService_ShortenURL(t *testing.T) {
 				storage: &shortenStorageMock{IsKeyFoundInStore: false},
 				seq:     &sequenceMock{HasErrorInGenerationSeq: false},
 			},
-			args: args{url: "https://github.com/"},
+			args: args{url: "https://github.com/", uid: "9d4f0794-3b01-44e4-ad35-3991b9e421a9"},
 		},
 		{
 			name: "Empty URL can be shortened and stored",
@@ -105,14 +110,14 @@ func TestURLShortenerService_ShortenURL(t *testing.T) {
 				storage: &shortenStorageMock{IsKeyFoundInStore: false},
 				seq:     &sequenceMock{HasErrorInGenerationSeq: true},
 			},
-			args: args{url: ""},
+			args: args{url: "", uid: "9d4f0794-3b01-44e4-ad35-3991b9e421a9"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := NewURLShortenerService(tt.fields.storage, tt.fields.seq, zap.NewNop())
 
-			got, err := u.ShortenURL(tt.args.url)
+			got, err := u.ShortenURL(tt.args.url, tt.args.uid)
 			if err != nil {
 				assert.Empty(t, got)
 			} else {

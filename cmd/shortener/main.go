@@ -16,6 +16,8 @@ The flags are:
 		If flag provided, starts server with HTTPS.
 	-c
 		Path to config file. Must be in .json format.
+	-t
+		Sets Trusted Subnet
 */
 package main
 
@@ -24,7 +26,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -39,6 +43,7 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/grpc"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/handlers"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
@@ -59,6 +64,8 @@ func init() {
 	fileStoragePath := flag.String("f", config.FileStoragePath(), "FILE_STORAGE_PATH")
 	databaseDSN := flag.String("d", config.DatabaseDSN(), "DATABASE_DSN")
 	enableHTTPS := flag.Bool("s", config.EnableHTTPS(), "ENABLE_HTTPS")
+	trustedSubnet := flag.String("t", config.TrustedSubnet(), "TRUSTED_SUBNET")
+	grpcPort := flag.String("g", config.GRPCPort(), "GRPC_PORT")
 	usingJSON := flag.String("c", config.JSONConfigPath(), "CONFIG PATH")
 
 	flag.Parse()
@@ -69,6 +76,8 @@ func init() {
 		config.WithFileStoragePath(*fileStoragePath),
 		config.WithDatabaseConnection(*databaseDSN),
 		config.WithEnableHTTPS(*enableHTTPS),
+		config.WithTrustedSubnet(*trustedSubnet),
+		config.WithGRPCPort(*grpcPort),
 		config.WithJSONConfig(*usingJSON),
 	)
 
@@ -103,8 +112,14 @@ func main() {
 	}
 	seq := sequence.NewSequence()
 
-	shortenHandler := handlers.NewURLShortenerHandler(service.NewURLShortenerService(s, seq, logger))
-	expandHandler := handlers.NewURLExpandHandler(service.NewURLExpandService(s, logger))
+	shortenService := service.NewURLShortenerService(s, seq, logger)
+	shortenHandler := handlers.NewURLShortenerHandler(shortenService)
+
+	expandService := service.NewURLExpandService(s, logger)
+	expandHandler := handlers.NewURLExpandHandler(expandService)
+
+	internalService := service.NewInternalService(s, logger)
+	internalHandler := handlers.NewInternalHandler(internalService)
 
 	db, err := storage.NewDBConnection(logger, true)
 	if err != nil {
@@ -132,7 +147,13 @@ func main() {
 		r.Post("/shorten/batch", batchHandler.BatchInsert)
 		r.Get("/user/urls", expandHandler.UserURLs)
 		r.Delete("/user/urls", deleteHandler.Delete)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.TrustedSubnet)
+			r.Get("/internal/stats", internalHandler.Stats)
+		})
 	})
+
+	go startGRPCServer(db, internalService, shortenService, expandService)
 
 	if config.EnableHTTPS() {
 		srv := startHTTPSServer(r, stop)
@@ -140,6 +161,21 @@ func main() {
 	} else {
 		srv := startHTTPServer(r, stop)
 		releaseResources(ctxContext, logger, srv, db)
+	}
+}
+
+// startGRPCServer - passed to gRPC server needed services and starts it.
+func startGRPCServer(db storage.DB, internal service.Internal, shorten service.URLShorten, expand service.URLExpand) {
+	server := grpc.NewServer(db, internal, shorten, expand)
+
+	listen, err := net.Listen("tcp", ":"+config.GRPCPort())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("gRPC Server started.")
+	if errServe := server.Serve(listen); errServe != nil {
+		log.Fatal(errServe)
 	}
 }
 

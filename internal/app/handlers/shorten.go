@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/sergalkin/go-url-shortener.git/internal/app/config"
+	"github.com/sergalkin/go-url-shortener.git/internal/app/middleware"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/service"
 	"github.com/sergalkin/go-url-shortener.git/internal/app/utils"
 )
@@ -44,7 +45,15 @@ func (h *URLShortenerHandler) ShortenURL(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	key, shortenErr := h.service.ShortenURL(body)
+	var uid string
+	fmt.Println("Guid:" + middleware.GetUUID())
+	errD := utils.Decode(middleware.GetUUID(), &uid)
+	if errD != nil {
+		http.Error(w, errD.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	key, shortenErr := h.service.ShortenURL(body, uid)
 	hasConflictInURL := errors.Is(shortenErr, utils.ErrLinksConflict)
 
 	if shortenErr != nil && !hasConflictInURL {
@@ -83,7 +92,14 @@ func (h *URLShortenerHandler) APIShortenURL(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	key, shortenErr := h.service.ShortenURL(requestData.URL)
+	var uid string
+	errD := utils.Decode(middleware.GetUUID(), &uid)
+	if errD != nil {
+		http.Error(w, errD.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	key, shortenErr := h.service.ShortenURL(requestData.URL, uid)
 	hasConflictInURL := errors.Is(shortenErr, utils.ErrLinksConflict)
 
 	if shortenErr != nil && !hasConflictInURL {
